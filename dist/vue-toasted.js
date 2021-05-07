@@ -949,13 +949,13 @@ var createToast = function createToast(html, options) {
 };
 
 var createIcon = function createIcon(options, toast) {
-
 	// add material icon if available
-	if (options.icon) {
+	if (!options.icon) return;
 
-		var iel = document.createElement('i');
-		iel.setAttribute('aria-hidden', 'true');
+	var iel = document.createElement('i');
+	iel.setAttribute('aria-hidden', 'true');
 
+	if (typeof options.iconPack === 'string') {
 		switch (options.iconPack) {
 			case 'fontawesome':
 
@@ -1010,13 +1010,25 @@ var createIcon = function createIcon(options, toast) {
 				iel.classList.add('material-icons');
 				iel.textContent = options.icon.name ? options.icon.name : options.icon;
 		}
-
-		if (options.icon.after) {
-			iel.classList.add('after');
-		}
-
-		appendIcon(options, iel, toast);
 	}
+
+	if (_typeof(options.iconPack) === 'object') {
+		var iconClasses = options.iconPack.classes ? options.iconPack.classes : ['material-icons'];
+
+		iconClasses.forEach(function (iconClass) {
+			iel.classList.add(iconClass);
+		});
+
+		if (options.iconPack.textContent) {
+			iel.textContent = options.icon.name ? options.icon.name : options.icon;
+		}
+	}
+
+	if (options.icon.after) {
+		iel.classList.add('after');
+	}
+
+	appendIcon(options, iel, toast);
 };
 
 var appendIcon = function appendIcon(options, el, toast) {
