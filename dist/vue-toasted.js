@@ -949,13 +949,13 @@ var createToast = function createToast(html, options) {
 };
 
 var createIcon = function createIcon(options, toast) {
-
 	// add material icon if available
-	if (options.icon) {
+	if (!options.icon) return;
 
-		var iel = document.createElement('i');
-		iel.setAttribute('aria-hidden', 'true');
+	var iel = document.createElement('i');
+	iel.setAttribute('aria-hidden', 'true');
 
+	if (typeof options.iconPack === 'string') {
 		switch (options.iconPack) {
 			case 'fontawesome':
 
@@ -1010,13 +1010,25 @@ var createIcon = function createIcon(options, toast) {
 				iel.classList.add('material-icons');
 				iel.textContent = options.icon.name ? options.icon.name : options.icon;
 		}
-
-		if (options.icon.after) {
-			iel.classList.add('after');
-		}
-
-		appendIcon(options, iel, toast);
 	}
+
+	if (_typeof(options.iconPack) === 'object') {
+		var iconClasses = options.iconPack.classes ? options.iconPack.classes : ['material-icons'];
+
+		iconClasses.forEach(function (iconClass) {
+			iel.classList.add(iconClass);
+		});
+
+		if (options.iconPack.textContent) {
+			iel.textContent = options.icon.name ? options.icon.name : options.icon;
+		}
+	}
+
+	if (options.icon.after) {
+		iel.classList.add('after');
+	}
+
+	appendIcon(options, iel, toast);
 };
 
 var appendIcon = function appendIcon(options, el, toast) {
@@ -1057,7 +1069,11 @@ var createAction = function createAction(action, toastObject) {
 	el.classList.add('ripple');
 
 	if (action.text) {
-		el.text = action.text;
+		if (action.href) {
+			el.text = action.text;
+		} else {
+			el.textContent = action.text;
+		}
 	}
 
 	if (action.href) {
@@ -1076,43 +1092,57 @@ var createAction = function createAction(action, toastObject) {
 		// create icon element
 		var iel = document.createElement('i');
 
-		switch (_options.iconPack) {
-			case 'fontawesome':
-				iel.classList.add('fa');
+		if (typeof _options.iconPack === 'string') {
+			switch (_options.iconPack) {
+				case 'fontawesome':
+					iel.classList.add('fa');
 
-				if (action.icon.includes('fa-')) {
-					iel.classList.add(action.icon.trim());
-				} else {
-					iel.classList.add('fa-' + action.icon.trim());
-				}
+					if (action.icon.includes('fa-')) {
+						iel.classList.add(action.icon.trim());
+					} else {
+						iel.classList.add('fa-' + action.icon.trim());
+					}
 
-				break;
-			case 'mdi':
-				iel.classList.add('mdi');
+					break;
+				case 'mdi':
+					iel.classList.add('mdi');
 
-				if (action.icon.includes('mdi-')) {
-					iel.classList.add(action.icon.trim());
-				} else {
-					iel.classList.add('mdi-' + action.icon.trim());
-				}
+					if (action.icon.includes('mdi-')) {
+						iel.classList.add(action.icon.trim());
+					} else {
+						iel.classList.add('mdi-' + action.icon.trim());
+					}
 
-				break;
-			case 'custom-class':
+					break;
+				case 'custom-class':
 
-				if (typeof action.icon === 'string') {
-					action.icon.split(' ').forEach(function (className) {
-						el.classList.add(className);
-					});
-				} else if (Array.isArray(action.icon)) {
-					action.icon.forEach(function (className) {
-						el.classList.add(className.trim());
-					});
-				}
+					if (typeof action.icon === 'string') {
+						action.icon.split(' ').forEach(function (className) {
+							el.classList.add(className);
+						});
+					} else if (Array.isArray(action.icon)) {
+						action.icon.forEach(function (className) {
+							el.classList.add(className.trim());
+						});
+					}
 
-				break;
-			default:
-				iel.classList.add('material-icons');
+					break;
+				default:
+					iel.classList.add('material-icons');
+					iel.textContent = action.icon;
+			}
+		}
+
+		if (_typeof(_options.iconPack) === 'object') {
+			var iconClasses = _options.iconPack.classes ? _options.iconPack.classes : ['material-icons'];
+
+			iconClasses.forEach(function (iconClass) {
+				iel.classList.add(iconClass);
+			});
+
+			if (_options.iconPack.textContent) {
 				iel.textContent = action.icon;
+			}
 		}
 
 		// append it to the button
