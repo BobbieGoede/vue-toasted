@@ -325,7 +325,11 @@ const createAction = (action, toastObject) => {
 	el.classList.add('ripple');
 
 	if (action.text) {
-		el.text = action.text
+		if(action.href){
+			el.text = action.text
+		} else{
+			el.textContent = action.text
+		}
 	}
 
 	if (action.href) {
