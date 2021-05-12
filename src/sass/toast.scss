@@ -87,6 +87,13 @@
         margin-right: -.4rem;
       }
     }
+	button {
+        background: none;
+        color: inherit;
+        border: none;
+        font: inherit;
+        line-height: normal;
+	}
 
     // Toast Action Styling
     .action {
@@ -101,13 +108,15 @@
       cursor: pointer;
 
       // Reset button style
-      @at-root #{selector-unify(&, button)} {
-        background: none;
-        color: inherit;
-        border: none;
-        font: inherit;
-        line-height: normal;
-      }
+    //   @at-root #{selector-unify(&, button)} {
+	// button {
+    //     background: none;
+    //     color: inherit;
+    //     border: none;
+    //     font: inherit;
+    //     line-height: normal;
+	// }
+    //   }
 
       &.icon {
         padding: 4px;
