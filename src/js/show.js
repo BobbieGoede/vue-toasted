@@ -128,7 +128,7 @@ const createToast = function (html, options) {
 	}
 	else {
 		// Insert as text;
-		toast.innerHTML = html;
+		toast.innerHTML = `<span class="toasted-message">${html}</span>`;
 	}
 
 	// add material icon if available
