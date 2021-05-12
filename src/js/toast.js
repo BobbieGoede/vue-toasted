@@ -25,7 +25,6 @@ export const Toasted = function (_options) {
 	 */
 	this.options = _options;
 
-
 	/**
 	 * Cached Options of the Toast
 	 */
@@ -109,6 +108,9 @@ export const Toasted = function (_options) {
 	 * @returns {*}
 	 */
 	this.show = (message, options) => {
+		if(this.options.customNotifications && this.options.customNotifications.show != null){
+			options = Object.assign(options, this.options.customNotifications.show)
+		}
 		return _show(this, message, options);
 	}
 
@@ -122,6 +124,9 @@ export const Toasted = function (_options) {
 	 */
 	this.success = (message, options) => {
 		options = options || {};
+		if(this.options.customNotifications && this.options.customNotifications.success != null){
+			options = Object.assign(options, this.options.customNotifications.success)
+		}
 		options.type = "success";
 		return _show(this, message, options);
 	}
@@ -136,6 +141,9 @@ export const Toasted = function (_options) {
 	 */
 	this.info = (message, options) => {
 		options = options || {};
+		if(this.options.customNotifications && this.options.customNotifications.info != null){
+			options = Object.assign(options, this.options.customNotifications.info)
+		}
 		options.type = "info";
 		return _show(this, message, options);
 	}
@@ -150,6 +158,9 @@ export const Toasted = function (_options) {
 	 */
 	this.error = (message, options) => {
 		options = options || {};
+		if(this.options.customNotifications && this.options.customNotifications.error != null){
+			options = Object.assign(options, this.options.customNotifications.error)
+		}
 		options.type = "error";
 		return _show(this, message, options);
 	}
