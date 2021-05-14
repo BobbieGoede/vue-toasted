@@ -12,7 +12,7 @@
 	"types": "./src/types/index.d.ts",
 	"scripts": {
 		"dev": "cross-env NODE_ENV=development webpack serve --open --hot",
-		"build": "cross-env NODE_ENV=production webpack --config ./build/webpack.release.js --progress --hide-modules",
+		"build": "cross-env NODE_ENV=production webpack --config ./build/webpack.release.js --progress",
 		"build-local-watch": "cross-env NODE_ENV=production webpack --config ./build/webpack.release.js --progress --hide-modules --watch",
 		"release": "npm run build && npm run core && npm run css",
 		"css": "cross-env NODE_ENV=production webpack --config ./build/webpack.release.css.js --progress --hide-modules ",
@@ -49,6 +49,7 @@
 		"hammerjs": "^2.0.8",
 		"node-sass": "^6.0.0",
 		"postcss-loader": "^5.2.0",
+		"prettier": "^2.3.0",
 		"requirejs": "^2.3.6",
 		"sass-loader": "^11.1.0",
 		"shortid": "^2.2.16",
