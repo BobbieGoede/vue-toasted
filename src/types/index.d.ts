@@ -5,20 +5,24 @@ export interface IToastObject {
 	// html element of the toast
 	el: ToastElement;
 	// change text or html of the toast
-	text: (text: string) => any;
+	text(text: string | Node): any;
 	// fadeAway the toast. default delay will be 800ms
-	goAway: (delay?: number) => any;
+	goAway(delay?: number): any;
 
-	remove: () => void;
-	disposed: () => boolean;
+	remove(): void;
+	disposed(): boolean;
 }
 
 export type ToastPosition = "top-right" | "top-center" | "top-left" | "bottom-right" | "bottom-center" | "bottom-left";
 export type ToastType = "success" | "info" | "error" | "default";
 export type ToastTheme = "primary" | "outline" | "bubble";
 export type ToastIconPack = "material" | "fontawesome" | "custom-class" | "callback";
+export type ToastIconPackObject = {
+	classes?: string[];
+	textContent?: boolean;
+};
 
-export interface ToastAction {
+export interface IToastAction {
 	/**
 	 * name of action
 	 */
@@ -49,7 +53,8 @@ export interface ToastAction {
 	onClick?: (e: any, toastObject: IToastObject) => any;
 }
 
-export interface ToastOptions {
+export interface IToastOptions {
+	id?: string;
 	/**
 	 * Position of the toast container (default: 'top-right')
 	 */
@@ -58,10 +63,13 @@ export interface ToastOptions {
 	 * Display time of the toast in millisecond
 	 */
 	duration?: number;
+
+	keepOnHover?: boolean;
+	configurations?: Record<string, IToastOptions>;
 	/**
 	 * Add single or multiple actions to toast explained here
 	 */
-	action?: ToastAction | ToastAction[];
+	action?: IToastAction | IToastAction[];
 	/**
 	 * Enable Full Width
 	 */
@@ -81,7 +89,7 @@ export interface ToastOptions {
 	/**
 	 * Material icon name as string
 	 */
-	icon?: ((ToastIcon: HTMLElement) => HTMLElement) | string | { name: string; after: boolean };
+	icon?: string | { name: string; after: boolean };
 	/**
 	 * Type of the Toast ['success', 'info', 'error']. (default: 'default')
 	 */
@@ -105,24 +113,36 @@ export interface ToastOptions {
 	/**
 	 * Icon pack type to be used
 	 */
-	iconPack?: ToastIconPack | string;
+	iconPack?: ToastIconPackObject | ToastIconPack | string;
+	router?: any;
+	customNotifications?: Record<"show" | "success" | "info" | "error", any>;
+	globalToasts?: Record<string, (payload, initiate) => IToasted>;
 }
 
 export interface IToasted {
+	id: string;
+	options: IToastOptions;
+	cachedOptions: IToastOptions;
+	global: Record<string, any>;
+	globalToasts: Record<string, IToasted>;
+	groups: IToasted[];
+	toasts: IToastObject[];
+	container: HTMLElement;
+
 	/**
 	 * Show a toast with success style
 	 *
 	 * @param message
 	 * @param options
 	 */
-	show(message: string, options?: ToastOptions): IToastObject;
+	show(message: string, options?: IToastOptions): IToastObject;
 
 	/**
 	 * Show a toast with success style
 	 * @param message
 	 * @param options
 	 */
-	success(message: string, options?: ToastOptions): IToastObject;
+	success(message: string, options?: IToastOptions): IToastObject;
 
 	/**
 	 * Show a toast with info style
@@ -130,7 +150,7 @@ export interface IToasted {
 	 * @param message
 	 * @param options
 	 */
-	info(message: string, options?: ToastOptions): IToastObject;
+	info(message: string, options?: IToastOptions): IToastObject;
 
 	/**
 	 * Show a toast with error style
@@ -138,7 +158,7 @@ export interface IToasted {
 	 * @param message
 	 * @param options
 	 */
-	error(message: string, options?: ToastOptions): IToastObject;
+	error(message: string, options?: IToastOptions): IToastObject;
 
 	/**
 	 * register your own toast with options explained here
@@ -147,18 +167,18 @@ export interface IToasted {
 	 * @param message
 	 * @param options
 	 */
-	register(name: string, message: string | ((payload: any) => string), options?: ToastOptions): void;
+	register(name: string, message: string | ((payload: any) => string), options?: IToastOptions): void;
 
 	/**
 	 * Clear all toasts
 	 */
 	clear(onClear?: () => void): boolean;
-
-	global: any;
+	remove(el: ToastElement): void;
+	group(o): IToasted;
 }
 
 declare class ToastedPlugin {
-	static install: PluginFunction<ToastOptions>;
+	static install: PluginFunction<IToastOptions>;
 }
 
 declare module "vue/types/vue" {

@@ -1,267 +1,174 @@
 import { show } from "./show";
 import animations from "./animations";
 import uuid from "shortid";
-import { IToasted, IToastObject, ToastElement, ToastOptions } from "src/types";
+import { IToasted, IToastObject, ToastElement, IToastOptions } from "src/types";
 
 /**
  * Toast
  * core instance of toast
- *
- * @param _options
- * @returns {Toasted}
- * @constructor
  */
 export class Toasted implements IToasted {
-	/**
-	 * Unique id of the toast
-	 */
+	/* Unique id of the toast */
 	id: string;
-	/**
-	 * Shared Options of the Toast
-	 */
-	options: Record<string, any> = {};
-	/**
-	 * Cached Options of the Toast
-	 */
-	cached_options: Record<string, any> = {};
-	/**
-	 * Shared Toasts list
-	 */
+	/* Shared Options of the Toast */
+	options: IToastOptions = {};
+	/* Cached Options of the Toast */
+	cachedOptions: Record<string, any> = {};
+	/* Shared Toasts list */
 	global: Record<string, any> = {};
-	/**
-	 * All Registered Groups
-	 */
-	groups: Toasted[] = [];
-	/**
-	 * All Registered Toasts
-	 */
+	globalToasts: Record<string, IToasted> = {};
+	/* All Registered Groups */
+	groups: IToasted[] = [];
+	/* All Registered Toasts */
 	toasts: IToastObject[] = [];
-	/**
-	 * Element of the Toast Container
-	 */
+	/* Element of the Toast Container */
 	container: HTMLElement = null;
+	configurations: Record<string, IToastOptions> = {
+		show: {},
+		info: { type: "info" },
+		success: { type: "success" },
+		error: { type: "error" },
+	};
 
-	constructor(_options: Record<string, any>) {
+	constructor(_options: IToastOptions) {
 		this.id = uuid.generate();
 		this.options = _options;
 
-		/**
-		 * Initiate toast container
-		 */
-		initiateToastContainer(this);
+		this.initializeToastContainer();
+		this.initializeCustomToasts();
 
-		/**
-		 * Initiate custom toasts
-		 */
-		initiateCustomToasts(this);
+		this.configurations = { ...this.configurations, ..._options?.configurations };
+		const configs = this.options.customNotifications ?? {};
+		Object.keys(this.configurations).forEach((x) => {
+			this.configurations[x] = { ...this.configurations[x], ...configs[x] };
+		});
 	}
 
-	/**
-	 * Create New Group of Toasts
-	 *
-	 * @param o
-	 */
-	group = (o) => {
-		if (!o) o = {};
-
-		if (!o.globalToasts) {
-			o.globalToasts = {};
-		}
-
-		// share parents global toasts
+	group(o: IToastOptions) {
+		o ??= { globalToasts: {} };
 		o.globalToasts = { ...o.globalToasts, ...this.global };
 
-		// tell parent about the group
-		let group = new Toasted(o);
+		const group = new Toasted(o);
 		this.groups.push(group);
 
 		return group;
-	};
+	}
 
-	/**
-	 * Register a Global Toast
-	 *
-	 * @param name
-	 * @param payload
-	 * @param options
-	 */
-	register = (name, payload, options) => {
-		options = { ...options };
-		return register(this, name, payload, options);
-	};
+	register(name: string, payload: any, options: IToastOptions = {}) {
+		return this.registerToast(name, payload, options);
+	}
 
-	/**
-	 * Show a Simple Toast
-	 *
-	 * @param message
-	 * @param options
-	 * @returns {*}
-	 */
-	show = (message: string, options: Record<string, any>) => {
-		if (this.options.customNotifications && this.options.customNotifications.show != null) {
-			options = { ...options, ...this.options.customNotifications.show };
-		}
-		return _show(this, message, options);
-	};
+	notify(id: string, message: string, options: IToastOptions = {}) {
+		const config = this.configurations?.[id] ?? {};
+		return this.showToast(message, { ...config, ...options });
+	}
 
-	/**
-	 * Show a Toast with Success Style
-	 *
-	 * @param message
-	 * @param options
-	 * @returns {*}
-	 */
-	success = (message: string, options: Record<string, any>) => {
-		options = { ...options, type: "success" };
-		if (this.options.customNotifications && this.options.customNotifications.success != null) {
-			options = { ...options, ...this.options.customNotifications.success };
-		}
-		return _show(this, message, options);
-	};
+	setConfiguration(id: string, options: IToastOptions = {}) {
+		this.configurations[id] = { ...options };
 
-	/**
-	 * Show a Toast with Info Style
-	 *
-	 * @param message
-	 * @param options
-	 * @returns {*}
-	 */
-	info = (message: string, options: Record<string, any>) => {
-		options = { ...options, type: "info" };
-		if (this.options.customNotifications && this.options.customNotifications.info != null) {
-			options = { ...options, ...this.options.customNotifications.info };
-		}
-		return _show(this, message, options);
-	};
+		return this.configurations[id];
+	}
 
-	/**
-	 * Show a Toast with Error Style
-	 *
-	 * @param message
-	 * @param options
-	 * @returns {*}
-	 */
-	error = (message: string, options: Record<string, any>) => {
-		options = { ...options, type: "error" };
-		if (this.options.customNotifications && this.options.customNotifications.error != null) {
-			options = { ...options, ...this.options.customNotifications.error };
-		}
-		return _show(this, message, options);
-	};
+	show(message: string, options: IToastOptions = {}) {
+		return this.notify("show", message, options);
+	}
 
-	/**
-	 * Remove a Toast
-	 * @param el
-	 */
-	remove = (el: ToastElement) => {
+	success(message: string, options: IToastOptions = {}) {
+		return this.notify("success", message, options);
+	}
+
+	info(message: string, options: IToastOptions = {}) {
+		return this.notify("info", message, options);
+	}
+
+	error(message: string, options: IToastOptions = {}) {
+		return this.notify("error", message, options);
+	}
+
+	remove(el: ToastElement) {
 		this.toasts = this.toasts.filter((t) => t.el.hash !== el.hash);
-		if (el.parentNode) el.parentNode.removeChild(el);
-	};
+		if (el.parentNode) {
+			el.parentNode.removeChild(el);
+		}
+	}
 
-	/**
-	 * Clear All Toasts
-	 *
-	 * @returns {boolean}
-	 */
-	clear = (onClear) => {
-		animations.clearAnimation(this.toasts, () => {
-			onClear && onClear();
-		});
+	/* Clear All Toasts */
+	clear(onClear: () => any) {
+		animations.clearAnimation(this.toasts, () => onClear && onClear());
 		this.toasts = [];
 
 		return true;
-	};
+	}
+
+	showToast(message: string | HTMLElement, options: IToastOptions = {}) {
+		// singleton feature
+		if (this.options.singleton && this.toasts.length > 0) {
+			this.cachedOptions = options;
+			this.toasts[this.toasts.length - 1].goAway(0);
+		}
+
+		// clone and merge the the global options with options
+		const toast = show(this, message, { ...this.options, ...options });
+		this.toasts.push(toast);
+
+		return toast;
+	}
+
+	registerToast(name: string, callback: (arg0: any) => any, options: IToastOptions) {
+		this.options.globalToasts ??= {};
+		this.options.globalToasts[name] = function (payload, initiate) {
+			// if callback is a string we will keep it that way..
+			if (typeof callback === "string") {
+				return initiate(callback, options);
+			}
+
+			if (typeof callback === "function") {
+				return initiate(callback(payload), options);
+			}
+		};
+
+		this.initializeCustomToasts();
+	}
+
+	initializeCustomToasts() {
+		const customToasts = this.options.globalToasts;
+
+		// this will initiate toast for the custom toast.
+		const initiate = (message: string | HTMLElement, options: string | IToastOptions) => {
+			// Use default notification function to display toast
+			if (typeof options === "string") {
+				if (["success", "info", "error"].includes(options)) {
+					return this[options](message, {});
+				}
+			} else {
+				// or else create a new toast with passed options.
+				return this.showToast(message, options);
+			}
+		};
+
+		if (customToasts) {
+			this.global = {};
+			const customToastNames = Object.keys(customToasts);
+			customToastNames.forEach((name) => {
+				// register the custom toast events to the Toast.custom property
+				this.global[name] = (payload = {}) => {
+					// return the it in order to expose the Toast methods
+					// return customToasts[key].apply(null, [payload, initiate]);
+					return customToasts[name](payload, initiate);
+				};
+			});
+		}
+	}
+
+	initializeToastContainer() {
+		// create notification container
+		const container = document.createElement("div");
+		container.id = this.id;
+		container.setAttribute("role", "status");
+		container.setAttribute("aria-live", "polite");
+		container.setAttribute("aria-atomic", "false");
+
+		document.body.appendChild(container);
+		this.container = container;
+	}
 }
-
-/**
- * Wrapper for show method in order to manipulate options
- *
- * @param instance
- * @param message
- * @param options
- * @returns {*}
- * @private
- */
-export const _show = function (instance: Toasted, message, options: Record<string, any>) {
-	options = options || {};
-	let toast = null;
-
-	if (typeof options !== "object") {
-		console.error("Options should be a type of object. given : " + options);
-		return null;
-	}
-
-	// singleton feature
-	if (instance.options.singleton && instance.toasts.length > 0) {
-		instance.cached_options = options;
-		instance.toasts[instance.toasts.length - 1].goAway(0);
-	}
-
-	// clone the global options
-	// merge the cached global options with options
-	const _options = { ...instance.options, ...options };
-
-	toast = show(instance, message, _options);
-	instance.toasts.push(toast);
-
-	return toast;
-};
-
-/**
- * Register the Custom Toasts
- */
-export const initiateCustomToasts = function (instance) {
-	const customToasts = instance.options.globalToasts;
-
-	// this will initiate toast for the custom toast.
-	const initiate = (message, options) => {
-		// check if passed option is a available method if so call it.
-		if (typeof options === "string" && instance[options]) {
-			return instance[options].apply(instance, [message, {}]);
-		}
-
-		// or else create a new toast with passed options.
-		return _show(instance, message, options);
-	};
-
-	if (customToasts) {
-		instance.global = {};
-
-		Object.keys(customToasts).forEach((key) => {
-			// register the custom toast events to the Toast.custom property
-			instance.global[key] = (payload = {}) => {
-				// return the it in order to expose the Toast methods
-				return customToasts[key].apply(null, [payload, initiate]);
-			};
-		});
-	}
-};
-
-const initiateToastContainer = function (instance) {
-	// create notification container
-	const container = document.createElement("div");
-	container.id = instance.id;
-	container.setAttribute("role", "status");
-	container.setAttribute("aria-live", "polite");
-	container.setAttribute("aria-atomic", "false");
-
-	document.body.appendChild(container);
-	instance.container = container;
-};
-
-const register = function (instance, name, callback, options) {
-	!instance.options.globalToasts ? (instance.options.globalToasts = {}) : null;
-
-	instance.options.globalToasts[name] = function (payload, initiate) {
-		// if call back is string we will keep it that way..
-		if (typeof callback === "string") {
-			return initiate(callback, options);
-		}
-
-		if (typeof callback === "function") {
-			return initiate(callback(payload), options);
-		}
-	};
-
-	initiateCustomToasts(instance);
-};

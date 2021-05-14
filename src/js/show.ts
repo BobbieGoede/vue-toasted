@@ -1,284 +1,191 @@
 import Hammer from "hammerjs";
 import animations from "./animations";
 import uuid from "shortid";
-import { ToastAction, ToastElement } from "src/types";
+import {
+	IToastAction,
+	ToastElement,
+	IToastOptions,
+	ToastPosition,
+	ToastIconPack,
+	ToastIconPackObject,
+} from "src/types";
 import { ToastObject } from "./object";
+import { Toasted } from "./toast";
 
-// string includes polyfill
-if (!String.prototype.includes) {
-	Object.defineProperty(String.prototype, "includes", {
-		value(search, start) {
-			if (typeof start !== "number") {
-				start = 0;
-			}
+let _options: IToastOptions = {};
+let _instance: Toasted = null;
 
-			if (start + search.length > this.length) {
-				return false;
-			} else {
-				return this.indexOf(search, start) !== -1;
-			}
-		},
-	});
+class ToastOptions implements IToastOptions {
+	onComplete = null;
+	position: ToastPosition = "top-right";
+	duration = null;
+	keepOnHover = false;
+	theme = "toasted-primary";
+	type = "default";
+	containerClass: string[] = [];
+	icon = null;
+	action = null;
+	closeOnSwipe = true;
+	iconPack: string | ToastIconPack | ToastIconPackObject = "material";
+	className: string[] = [];
+
+	constructor(o: IToastOptions) {
+		if (o.onComplete) this.onComplete = o.onComplete;
+		if (o.position) this.position = o.position;
+		if (o.duration) this.duration = o.duration;
+		if (o.keepOnHover) this.keepOnHover = o.keepOnHover;
+		if (o.theme) this.theme = o.theme;
+		if (o.type) this.type = o.type;
+		if (o.icon) this.icon = o.icon;
+		if (o.action) this.action = o.action;
+		if (o.closeOnSwipe) this.closeOnSwipe = o.closeOnSwipe;
+		if (o.iconPack) this.iconPack = o.iconPack;
+		if (typeof o.className === "string") this.className = o.className.split(" ");
+		if (typeof o.containerClass === "string") this.containerClass = o.containerClass.split(" ");
+
+		if (this.theme) this.className.push(this.theme.trim());
+		if (this.type) this.className.push(this.type);
+
+		if (this.position) this.containerClass.push(this.position.trim());
+		if (o.fullWidth) this.containerClass.push("full-width");
+		if (o.fitToScreen) this.containerClass.push("fit-to-screen");
+
+		_options = this;
+	}
 }
 
-let _options: Record<string, any> = {};
-let _instance = null;
-/**
- * parse Options
- *
- * @param options
- * @returns {{el: *, text: text, goAway: goAway}}
- */
-const parseOptions = function (options) {
-	// class name to be added on the toast
-	options.className = options.className || null;
+const createToast = function (html: HTMLElement | string, options: IToastOptions): ToastElement {
+	const toastEl: ToastElement = document.createElement("div");
+	toastEl.classList.add("toasted");
+	toastEl.hash = uuid.generate();
 
-	// complete call back of the toast
-	options.onComplete = options.onComplete || null;
-
-	// toast position
-	options.position = options.position || "top-right";
-
-	// toast duration
-	options.duration = options.duration || null;
-
-	// keep toast open on mouse over
-	options.keepOnHover = options.keepOnHover || false;
-
-	// normal type will allow the basic color
-	options.theme = options.theme || "toasted-primary";
-
-	// normal type will allow the basic color
-	options.type = options.type || "default";
-
-	// class name to be added on the toast container
-	options.containerClass = options.containerClass || null;
-
-	// check if the fullWidth is enabled
-	options.fullWidth = options.fullWidth || false;
-
-	// get icon name
-	options.icon = options.icon || null;
-
-	// get action name
-	options.action = options.action || null;
-
-	// check if the toast needs to be fitted in the screen (no margin gap between screen)
-	options.fitToScreen = options.fitToScreen || null;
-
-	// check if closes the toast when the user swipes it
-	options.closeOnSwipe = typeof options.closeOnSwipe !== "undefined" ? options.closeOnSwipe : true;
-
-	// get the icon pack name. defaults to material
-	options.iconPack = options.iconPack || "material";
-
-	/* transform options */
-
-	// toast class
-	if (options.className && typeof options.className === "string") {
-		options.className = options.className.split(" ");
+	if (options.className && Array.isArray(options.className)) {
+		options.className.forEach((className) => toastEl.classList.add(className));
 	}
 
-	if (!options.className) {
-		options.className = [];
-	}
-
-	options.theme && options.className.push(options.theme.trim());
-	options.type && options.className.push(options.type);
-
-	// toast container class
-	if (options.containerClass && typeof options.containerClass === "string") {
-		options.containerClass = options.containerClass.split(" ");
-	}
-
-	if (!options.containerClass) {
-		options.containerClass = [];
-	}
-
-	options.position && options.containerClass.push(options.position.trim());
-	options.fullWidth && options.containerClass.push("full-width");
-	options.fitToScreen && options.containerClass.push("fit-to-screen");
-
-	_options = options;
-	return options;
-};
-
-const createToast = function (html, options): ToastElement {
-	// Create toast
-	const toast: ToastElement = document.createElement("div");
-	toast.classList.add("toasted");
-
-	// set unique identifier
-	toast.hash = uuid.generate();
-
-	if (options.className) {
-		options.className.forEach((className) => {
-			toast.classList.add(className);
-		});
-	}
-
-	// If type of parameter is HTML Element
-	if (
-		typeof HTMLElement === "object"
-			? html instanceof HTMLElement
-			: html &&
-			  typeof html === "object" &&
-			  html !== null &&
-			  html.nodeType === 1 &&
-			  typeof html.nodeName === "string"
-	) {
-		toast.appendChild(html);
+	if (html instanceof HTMLElement) {
+		toastEl.appendChild(html);
 	} else {
-		// Insert as text;
-		toast.innerHTML = `<span class="toasted-message">${html}</span>`;
+		const messageElement = document.createElement("span");
+		messageElement.classList.add("toasted-message");
+		messageElement.innerHTML = html;
+		toastEl.appendChild(messageElement);
 	}
 
-	// add material icon if available
-	createIcon(options, toast);
+	if (options.icon) {
+		const icon = createIcon(options);
+
+		if (typeof options.icon === "object" && options.icon.after) {
+			toastEl.appendChild(icon);
+		} else {
+			toastEl.insertBefore(icon, toastEl.firstChild);
+		}
+	}
 
 	if (options.closeOnSwipe) {
-		// Bind hammer
-		const hammerHandler = new Hammer(toast);
-		hammerHandler.on("pan", function (e) {
+		const hammerHandler = new Hammer(toastEl);
+
+		hammerHandler.on("pan", (e) => {
 			const deltaX = e.deltaX;
 			const activationDistance = 80;
 
 			// Change toast state
-			if (!toast.classList.contains("panning")) {
-				toast.classList.add("panning");
+			if (!toastEl.classList.contains("panning")) {
+				toastEl.classList.add("panning");
 			}
 
 			let opacityPercent = 1 - Math.abs(deltaX / activationDistance);
 			if (opacityPercent < 0) opacityPercent = 0;
 
-			animations.animatePanning(toast, deltaX, opacityPercent);
+			animations.animatePanning(toastEl, deltaX, opacityPercent);
 		});
 
-		hammerHandler.on("panend", function (e) {
+		hammerHandler.on("panend", (e) => {
 			const deltaX = e.deltaX;
 			const activationDistance = 80;
 
 			// If toast dragged past activation point
 			if (Math.abs(deltaX) > activationDistance) {
-				animations.animatePanEnd(toast, function () {
+				animations.animatePanEnd(toastEl, function () {
 					if (typeof options.onComplete === "function") {
 						options.onComplete();
 					}
 
-					if (toast.parentNode) {
-						_instance.remove(toast);
+					if (toastEl.parentNode) {
+						_instance.remove(toastEl);
 					}
 				});
 			} else {
-				toast.classList.remove("panning");
+				toastEl.classList.remove("panning");
 				// Put toast back into original position
-				animations.animateReset(toast);
+				animations.animateReset(toastEl);
 			}
 		});
 	}
 
 	// create and append actions
-	if (Array.isArray(options.action)) {
+	if (options.action) {
+		options.action = Array.isArray(options.action) ? options.action : [options.action];
 		options.action.forEach((action) => {
-			const el = createAction(action, new ToastObject(toast, _instance));
-			if (el) toast.appendChild(el);
+			const el = createAction(action, new ToastObject(toastEl, _instance));
+			if (el) toastEl.appendChild(el);
 		});
-	} else if (typeof options.action === "object") {
-		const action = createAction(options.action, new ToastObject(toast, _instance));
-		if (action) toast.appendChild(action);
 	}
 
-	return toast;
+	return toastEl;
 };
 
-const createIcon = (options, toast) => {
-	// add material icon if available
-	if (!options.icon) return;
-
-	let iel = document.createElement("i");
-	iel.setAttribute("aria-hidden", "true");
+const createIcon = (options) => {
+	let iconEl = document.createElement("i");
+	iconEl.setAttribute("aria-hidden", "true");
 
 	if (typeof options.iconPack === "string") {
+		let iconClass = options.icon?.name ?? options.icon;
+		iconClass = iconClass.trim();
+
 		switch (options.iconPack) {
 			case "fontawesome":
-				iel.classList.add("fa");
-
-				let faName = options.icon.name ? options.icon.name : options.icon;
-
-				if (faName.includes("fa-")) {
-					iel.classList.add(faName.trim());
-				} else {
-					iel.classList.add("fa-" + faName.trim());
-				}
+				iconEl.classList.add("fa");
+				iconEl.classList.add(iconClass.includes("fa-") ? iconClass : `fa-${iconClass}`);
 
 				break;
 			case "mdi":
-				iel.classList.add("mdi");
-
-				let mdiName = options.icon.name ? options.icon.name : options.icon;
-
-				if (mdiName.includes("mdi-")) {
-					iel.classList.add(mdiName.trim());
-				} else {
-					iel.classList.add("mdi-" + mdiName.trim());
-				}
+				iconEl.classList.add("mdi");
+				iconEl.classList.add(iconClass.includes("mdi-") ? iconClass : `mdi-${iconClass}`);
 
 				break;
 			case "custom-class":
-				let classes = options.icon.name ? options.icon.name : options.icon;
-
-				if (typeof classes === "string") {
-					classes.split(" ").forEach((className) => {
-						iel.classList.add(className);
-					});
-				} else if (Array.isArray(classes)) {
-					classes.forEach((className) => {
-						iel.classList.add(className.trim());
-					});
-				}
+				let classArray = Array.isArray(iconClass) ? iconClass : iconClass.split(" ");
+				classArray.forEach((className) => iconEl.classList.add(className.trim()));
 
 				break;
 			case "callback":
 				let callback = options.icon && options.icon instanceof Function ? options.icon : null;
-
 				if (callback) {
-					iel = callback(iel);
+					iconEl = callback(iconEl);
 				}
 
 				break;
 			default:
-				iel.classList.add("material-icons");
-				iel.textContent = options.icon.name ? options.icon.name : options.icon;
+				iconEl.classList.add("material-icons");
+				iconEl.textContent = options.icon?.name ?? options.icon;
 		}
 	}
 
 	if (typeof options.iconPack === "object") {
-		const iconClasses = options.iconPack.classes ? options.iconPack.classes : ["material-icons"];
-
-		iconClasses.forEach((iconClass) => {
-			iel.classList.add(iconClass);
-		});
+		const iconClasses = options.iconPack.classes ?? ["material-icons"];
+		iconClasses.forEach((iconClass) => iconEl.classList.add(iconClass));
 
 		if (options.iconPack.textContent) {
-			iel.textContent = options.icon.name ? options.icon.name : options.icon;
+			iconEl.textContent = options.icon?.name ?? options.icon;
 		}
 	}
 
 	if (options.icon.after) {
-		iel.classList.add("after");
+		iconEl.classList.add("after");
 	}
 
-	appendIcon(options, iel, toast);
-};
-
-const appendIcon = (options, el, toast) => {
-	if (options.icon) {
-		if (options.icon.after && options.icon.name) {
-			toast.appendChild(el);
-		} else {
-			toast.insertBefore(el, toast.firstChild);
-		}
-	}
+	return iconEl;
 };
 
 /**
@@ -288,9 +195,7 @@ const appendIcon = (options, el, toast) => {
  * @param toastObject
  * @returns {Element}
  */
-const createAction = (action: ToastAction, toastObject) => {
-	if (!action) return null;
-
+const createAction = (action: IToastAction, toastObject: ToastObject) => {
 	const el = document.createElement(action.href ? "a" : "button");
 
 	el.classList.add("action");
@@ -310,72 +215,48 @@ const createAction = (action: ToastAction, toastObject) => {
 	// }
 
 	if (action.icon) {
-		// add icon class to style it
 		el.classList.add("icon");
-
-		// create icon element
-		const iel = document.createElement("i");
+		const iconEl = document.createElement("i");
 
 		if (typeof _options.iconPack === "string") {
+			const iconClass = action.icon.trim();
+
 			switch (_options.iconPack) {
 				case "fontawesome":
-					iel.classList.add("fa");
-
-					if (action.icon.includes("fa-")) {
-						iel.classList.add(action.icon.trim());
-					} else {
-						iel.classList.add("fa-" + action.icon.trim());
-					}
+					iconEl.classList.add("fa");
+					iconEl.classList.add(iconClass.includes("fa-") ? iconClass : `fa-${iconClass}`);
 
 					break;
 				case "mdi":
-					iel.classList.add("mdi");
-
-					if (action.icon.includes("mdi-")) {
-						iel.classList.add(action.icon.trim());
-					} else {
-						iel.classList.add("mdi-" + action.icon.trim());
-					}
+					iconEl.classList.add("mdi");
+					iconEl.classList.add(iconClass.includes("mdi-") ? iconClass : `mdi-${iconClass}`);
 
 					break;
 				case "custom-class":
-					action.icon.split(" ").forEach((className) => {
-						el.classList.add(className);
-					});
+					action.icon.split(" ").forEach((className) => el.classList.add(className));
 
 					break;
 				default:
-					iel.classList.add("material-icons");
-					iel.textContent = action.icon;
+					iconEl.classList.add("material-icons");
+					iconEl.textContent = action.icon;
 			}
 		}
 
 		if (typeof _options.iconPack === "object") {
-			const iconClasses = _options.iconPack.classes ? _options.iconPack.classes : ["material-icons"];
-
-			iconClasses.forEach((iconClass) => {
-				iel.classList.add(iconClass);
-			});
+			const iconClasses = _options.iconPack?.classes ?? ["material-icons"];
+			iconClasses.forEach((iconClass) => iconEl.classList.add(iconClass));
 
 			if (_options.iconPack.textContent) {
-				iel.textContent = action.icon;
+				iconEl.textContent = action.icon;
 			}
 		}
 
-		// append it to the button
-		el.appendChild(iel);
+		el.appendChild(iconEl);
 	}
 
 	if (action.class) {
-		if (typeof action.class === "string") {
-			action.class.split(" ").forEach((className) => {
-				el.classList.add(className);
-			});
-		} else if (Array.isArray(action.class)) {
-			action.class.forEach((className) => {
-				el.classList.add(className.trim());
-			});
-		}
+		const actionClasses = Array.isArray(action.class) ? action.class : action.class.split(" ");
+		actionClasses.forEach((className) => el.classList.add(className.trim()));
 	}
 
 	// initiate push with ready
@@ -398,12 +279,10 @@ const createAction = (action: ToastAction, toastObject) => {
 		});
 	}
 
-	if (action.onClick && typeof action.onClick === "function") {
+	if (typeof action.onClick === "function") {
 		el.addEventListener("click", (e) => {
-			if (action.onClick) {
-				e.preventDefault();
-				action.onClick(e, toastObject);
-			}
+			e.preventDefault();
+			action.onClick(e, toastObject);
 		});
 	}
 
@@ -412,31 +291,28 @@ const createAction = (action: ToastAction, toastObject) => {
 
 /**
  * this method will create the toast
- *
- * @param instance
- * @param message
- * @param options
- * @returns {{el: *, text: text, goAway: goAway}}
  */
-export const show = function (instance, message, options) {
+export const show = function (
+	instance: Toasted,
+	message: string | HTMLElement,
+	options: Record<string, any>
+): ToastObject {
 	// share the instance across
 	_instance = instance;
 
-	options = parseOptions(options);
+	options = new ToastOptions(options);
 	const container = _instance.container;
 
-	options.containerClass.unshift("toasted-container");
+	options.containerClass = ["toasted-container", ...options.containerClass];
 
 	// check if the container classes has changed if so update it
 	if (container.className !== options.containerClass.join(" ")) {
 		container.className = "";
-		options.containerClass.forEach((className) => {
-			container.classList.add(className);
-		});
+		options.containerClass.forEach((className) => container.classList.add(className));
 	}
 
 	// Select and append toast
-	let newToast = createToast(message, options);
+	const newToast = createToast(message, options);
 
 	// only append toast if message is not undefined
 	if (message) {
@@ -452,8 +328,8 @@ export const show = function (instance, message, options) {
 	let timeLeft = options.duration;
 	let counterInterval;
 	if (timeLeft !== null) {
-		const createInterval = () =>
-			setInterval(function () {
+		const createInterval = () => {
+			setInterval(() => {
 				if (newToast.parentNode === null) window.clearInterval(counterInterval);
 
 				// If toast is not being dragged, decrease its time remaining
@@ -463,7 +339,6 @@ export const show = function (instance, message, options) {
 
 				if (timeLeft <= 0) {
 					// Animate toast out
-
 					animations.animateOut(newToast, function () {
 						// Call the optional callback
 						if (typeof options.onComplete === "function") options.onComplete();
@@ -476,17 +351,14 @@ export const show = function (instance, message, options) {
 					window.clearInterval(counterInterval);
 				}
 			}, 20);
+		};
 
 		counterInterval = createInterval();
 
 		// Toggle interval on hover
 		if (options.keepOnHover) {
-			newToast.addEventListener("mouseover", () => {
-				window.clearInterval(counterInterval);
-			});
-			newToast.addEventListener("mouseout", () => {
-				counterInterval = createInterval();
-			});
+			newToast.addEventListener("mouseover", () => window.clearInterval(counterInterval));
+			newToast.addEventListener("mouseout", () => (counterInterval = createInterval()));
 		}
 	}
 
