@@ -2,7 +2,7 @@ const { VueLoaderPlugin } = require("vue-loader");
 var path = require("path");
 var webpack = require("webpack");
 // var autoprefixer = require('autoprefixer')
-// const BundleAnalyzerPlugin = require('webpack-bundle-analyzer').BundleAnalyzerPlugin;
+const BundleAnalyzerPlugin = require("webpack-bundle-analyzer").BundleAnalyzerPlugin;
 
 module.exports = {
 	entry: "./src/index.ts",
@@ -12,7 +12,7 @@ module.exports = {
 		filename: "vue-toasted.min.js",
 		libraryTarget: "umd",
 	},
-	plugins: [new VueLoaderPlugin()],
+	plugins: [new VueLoaderPlugin(), new BundleAnalyzerPlugin()],
 	module: {
 		rules: [
 			{
@@ -71,16 +71,11 @@ module.exports = {
 
 if (process.env.NODE_ENV === "production") {
 	module.exports.mode = "production";
-	module.exports.devtool = "#source-map";
+	// module.exports.devtool = "hidden-source-map";
 	// http://vue-loader.vuejs.org/en/workflow/production.html
 	module.exports.plugins = (module.exports.plugins || []).concat([
-		// new webpack.optimize.UglifyJsPlugin({
-		// 	sourceMap: false,
-		// 	compress: { warnings: false },
-		// 	comments: false,
-		// }),
 		new webpack.ProvidePlugin({}),
-		// new BundleAnalyzerPlugin(),
+		new BundleAnalyzerPlugin(),
 		new webpack.LoaderOptionsPlugin({
 			minimize: true,
 		}),
