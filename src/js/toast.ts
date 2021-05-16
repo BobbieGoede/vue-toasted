@@ -1,4 +1,4 @@
-import { show } from "./show";
+import { ToastNotification } from "./show";
 import animations from "./animations";
 import uuid from "shortid";
 import { IToasted, IToastObject, ToastElement, IToastOptions } from "src/types";
@@ -108,7 +108,7 @@ export class Toasted implements IToasted {
 		}
 
 		// clone and merge the the global options with options
-		const toast = show(this, message, { ...this.options, ...options });
+		const toast = new ToastNotification(this, message, { ...this.options, ...options });
 		this.toasts.push(toast);
 
 		return toast;

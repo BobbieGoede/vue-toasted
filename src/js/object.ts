@@ -3,8 +3,8 @@ import animations from "./animations";
 import { Toasted } from "./toast";
 
 export class ToastObject implements IToastObject {
-	isDisposed: boolean = false;
 	el: ToastElement = null;
+	isDisposed: boolean = false;
 	instance: Toasted = null;
 
 	constructor(el: ToastElement, instance: Toasted) {

@@ -2,13 +2,12 @@ import { PluginFunction } from "vue";
 
 export type ToastElement = HTMLDivElement & { hash?: string };
 export interface IToastObject {
-	// html element of the toast
+	isDisposed: boolean;
+	instance: IToasted;
 	el: ToastElement;
-	// change text or html of the toast
-	text(text: string | Node): any;
-	// fadeAway the toast. default delay will be 800ms
-	goAway(delay?: number): any;
 
+	text(text: string | Node): any;
+	goAway(delay?: number): any;
 	remove(): void;
 	disposed(): boolean;
 }

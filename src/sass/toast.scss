@@ -60,14 +60,18 @@
 	}
 
 	// fix positioning floating
-	&.top-left .toasted,
-	&.bottom-left .toasted {
-		float: left;
+	&.top-left,
+	&.bottom-left {
+		.toasted {
+			float: left;
+		}
 	}
 
-	&.top-right .toasted,
-	&.bottom-right .toasted {
-		float: right;
+	&.top-right,
+	&.bottom-right {
+		.toasted {
+			float: right;
+		}
 	}
 
 	// toast element styling

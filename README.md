@@ -197,7 +197,7 @@ containerClass|String, Array|null|Custom css classes for toast container
 iconPack|String|'material'| Icon pack type to be used <br> **['material', 'fontawesome', 'mdi', 'custom-class', 'callback']**
 Icon|String, Object|null|Material icon name as string.  [explained here](#icons-fire)
 type|String|'default'| Type of the Toast  **['success', 'info', 'error']**
-theme|String|'toasted-primary'|Theme of the toast you prefer<br> **['toasted-primary', 'outline', 'bubble']**
+theme|String|'toasted-primary'|Theme of the toast you prefer<br> **['primary', 'outline', 'bubble']**
 onComplete|Function|null|Trigger when toast is completed
 closeOnSwipe|Boolean|true|Closes the toast when the user swipes it
 singleton|Boolean|false| Only allows one toast at a time.
