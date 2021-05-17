@@ -5,9 +5,25 @@ const TerserPlugin = require("terser-webpack-plugin");
 // const BundleAnalyzerPlugin = require("webpack-bundle-analyzer").BundleAnalyzerPlugin;
 
 module.exports = {
+	mode: "production",
+	devtool: "eval-cheap-source-map",
+	devServer: {
+		historyApiFallback: true,
+		noInfo: true,
+	},
 	entry: {
 		"vue-toasted": "./src/index.ts",
 		"vue-toasted.min": "./src/index.ts",
+	},
+	resolve: {
+		alias: {
+			vue$: "vue/dist/vue.esm.js",
+		},
+		extensions: [".ts", ".js"],
+	},
+	optimization: {
+		minimizer: [new TerserPlugin({ extractComments: false })],
+		// minimize: false,
 	},
 	output: {
 		path: path.resolve(__dirname, "../dist"),
@@ -52,25 +68,6 @@ module.exports = {
 			},
 		],
 	},
-	resolve: {
-		alias: {
-			vue$: "vue/dist/vue.esm.js",
-		},
-		extensions: [".ts", ".js"],
-	},
-	devServer: {
-		historyApiFallback: true,
-		noInfo: true,
-	},
-	performance: {
-		hints: false,
-	},
-	optimization: {
-		minimizer: [new TerserPlugin({ extractComments: false })],
-		// minimize: false,
-	},
-	devtool: "eval-cheap-source-map",
-	mode: "production",
 };
 
 if (process.env.NODE_ENV === "production") {
@@ -78,9 +75,7 @@ if (process.env.NODE_ENV === "production") {
 	// http://vue-loader.vuejs.org/en/workflow/production.html
 	module.exports.plugins = [
 		...(module.exports?.plugins ?? []),
-		new webpack.DefinePlugin({
-			"process.env": { NODE_ENV: '"production"' },
-		}),
+		new webpack.DefinePlugin({ "process.env": { NODE_ENV: '"production"' } }),
 		new TerserPlugin({ extractComments: false }),
 		new webpack.ProvidePlugin({}),
 		// new BundleAnalyzerPlugin(),

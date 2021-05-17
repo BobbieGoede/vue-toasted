@@ -1,11 +1,29 @@
 const path = require("path");
 const webpack = require("webpack");
 const { VueLoaderPlugin } = require("vue-loader");
+const TerserPlugin = require("terser-webpack-plugin");
 
 module.exports = {
+	mode: "production",
+	devtool: "source-map",
+	plugins: [new VueLoaderPlugin()],
 	entry: {
 		toasted: "./src/index-core.ts",
 		"toasted.min": "./src/index-core.ts",
+	},
+	devServer: {
+		historyApiFallback: true,
+		noInfo: true,
+	},
+	optimization: {
+		minimizer: [new TerserPlugin({ extractComments: false })],
+		// minimize: false,
+	},
+	resolve: {
+		alias: {
+			vue$: "vue/dist/vue.esm.js",
+		},
+		extensions: [".ts", ".js"],
 	},
 	output: {
 		path: path.resolve(__dirname, "../dist"),
@@ -13,7 +31,6 @@ module.exports = {
 		filename: "[name].js",
 		libraryTarget: "umd",
 	},
-	plugins: [new VueLoaderPlugin()],
 	module: {
 		rules: [
 			{
@@ -24,7 +41,6 @@ module.exports = {
 						scss: "vue-style-loader!css-loader!postcss-loader!sass-loader",
 						sass: "vue-style-loader!css-loader!postcss-loader!sass-loader?indentedSyntax",
 					},
-					// other vue-loader options go here
 				},
 			},
 			{
@@ -50,20 +66,6 @@ module.exports = {
 			},
 		],
 	},
-	resolve: {
-		alias: {
-			vue$: "vue/dist/vue.esm.js",
-		},
-		extensions: [".ts", ".js"],
-	},
-	devServer: {
-		historyApiFallback: true,
-		noInfo: true,
-	},
-	performance: {
-		hints: false,
-	},
-	devtool: "source-map",
 };
 
 if (process.env.NODE_ENV === "production") {
@@ -71,9 +73,8 @@ if (process.env.NODE_ENV === "production") {
 	// http://vue-loader.vuejs.org/en/workflow/production.html
 	module.exports.plugins = [
 		...(module.exports?.plugins ?? []),
-		new webpack.DefinePlugin({
-			"process.env": { NODE_ENV: '"production"' },
-		}),
+		new webpack.DefinePlugin({ "process.env": { NODE_ENV: '"production"' } }),
+		new TerserPlugin({ extractComments: false }),
 		new webpack.ProvidePlugin({}),
 		// new BundleAnalyzerPlugin(),
 		new webpack.LoaderOptionsPlugin({
