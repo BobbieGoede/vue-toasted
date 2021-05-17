@@ -8,11 +8,11 @@
 		"type": "git",
 		"url": "https://github.com/shakee93/vue-toasted.git"
 	},
-	"sideEffects": false,
+	"sideEffects": true,
 	"main": "./dist/vue-toasted.js",
 	"types": "./src/types/index.d.ts",
 	"scripts": {
-		"dev": "cross-env NODE_ENV=development webpack serve --open --hot",
+		"dev": "cross-env NODE_ENV=development webpack serve --open --hot --port 7777",
 		"build": "cross-env NODE_ENV=production webpack --config ./build/webpack.release.js --progress",
 		"build-local-watch": "cross-env NODE_ENV=production webpack --config ./build/webpack.release.js --progress --watch",
 		"release": "npm run build && npm run core && npm run css",
@@ -32,7 +32,6 @@
 		"vue-toastr",
 		"toastr"
 	],
-	"dependencies": {},
 	"devDependencies": {
 		"@babel/core": "^7.14.2",
 		"@babel/preset-env": "^7.14.2",
@@ -47,6 +46,7 @@
 		"cross-env": "^7.0.3",
 		"css-loader": "^5.2.4",
 		"file-loader": "^6.2.0",
+		"html-webpack-plugin": "^5.3.1",
 		"mini-css-extract-plugin": "^1.6.0",
 		"node-sass": "^6.0.0",
 		"postcss-loader": "^5.3.0",
