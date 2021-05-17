@@ -1,20 +1,19 @@
 const { VueLoaderPlugin } = require("vue-loader");
-var path = require("path");
-var webpack = require("webpack");
-// const TerserPlugin = require("terser-webpack-plugin");
-// var autoprefixer = require("autoprefixer");
+const path = require("path");
+const webpack = require("webpack");
+const TerserPlugin = require("terser-webpack-plugin");
 // const BundleAnalyzerPlugin = require("webpack-bundle-analyzer").BundleAnalyzerPlugin;
 
 module.exports = {
 	entry: {
 		"vue-toasted": "./src/index.ts",
-		"vue-toasted.min": "./src/index.ts"
+		"vue-toasted.min": "./src/index.ts",
 	},
 	output: {
 		path: path.resolve(__dirname, "../dist"),
 		publicPath: "/dist/",
 		filename: "[name].js",
-		libraryTarget: "umd"
+		libraryTarget: "umd",
 	},
 	plugins: [new VueLoaderPlugin()],
 	module: {
@@ -25,76 +24,68 @@ module.exports = {
 				options: {
 					loaders: {
 						scss: "vue-style-loader!css-loader!postcss-loader!sass-loader",
-						sass: "vue-style-loader!css-loader!postcss-loader!sass-loader?indentedSyntax"
-					}
+						sass: "vue-style-loader!css-loader!postcss-loader!sass-loader?indentedSyntax",
+					},
 					// other vue-loader options go here
-				}
+				},
 			},
 			{
 				test: /\.scss$/,
-				use: ["vue-style-loader", "css-loader", "sass-loader"]
+				use: ["vue-style-loader", "css-loader", "sass-loader"],
 			},
 			{
 				test: /\.js$/,
 				loader: "babel-loader",
-				exclude: /node_modules/
+				exclude: /node_modules/,
 			},
 			{
 				test: /\.ts$/,
 				loader: "ts-loader",
-				options: { appendTsSuffixTo: [/\.vue$/] }
+				options: { appendTsSuffixTo: [/\.vue$/] },
 			},
 			{
 				test: /\.(png|jpg|gif|svg)$/,
 				loader: "file-loader",
 				options: {
-					name: "[name].[ext]?[hash]"
-				}
-			}
-		]
+					name: "[name].[ext]?[hash]",
+				},
+			},
+		],
 	},
 	resolve: {
 		alias: {
-			vue$: "vue/dist/vue.esm.js"
+			vue$: "vue/dist/vue.esm.js",
 		},
-		extensions: [".ts", ".js"]
+		extensions: [".ts", ".js"],
 	},
 	devServer: {
 		historyApiFallback: true,
-		noInfo: true
+		noInfo: true,
 	},
 	performance: {
-		hints: false
+		hints: false,
 	},
-	// optimization: {
-	// 	minimizer: [new TerserPlugin({ extractComments: false })]
-	// },
 	optimization: {
-		// We no not want to minimize our code.
-		minimize: false
+		minimizer: [new TerserPlugin({ extractComments: false })],
+		// minimize: false,
 	},
 	devtool: "eval-cheap-source-map",
-	mode: "production"
+	mode: "production",
 };
 
 if (process.env.NODE_ENV === "production") {
 	module.exports.devtool = "source-map";
 	// http://vue-loader.vuejs.org/en/workflow/production.html
-	module.exports.plugins = (module.exports.plugins || []).concat([
+	module.exports.plugins = [
+		...(module.exports?.plugins ?? []),
 		new webpack.DefinePlugin({
-			"process.env": { NODE_ENV: '"production"' }
+			"process.env": { NODE_ENV: '"production"' },
 		}),
-		// new TerserPlugin({ extractComments: false }),
-		// new webpack.optimize.UglifyJsPlugin({
-		// 	include: /\.min\.js$/,
-		// 	sourceMap: false,
-		// 	compress: { warnings: false },
-		// 	comments: false,
-		// }),
-		new webpack.ProvidePlugin({})
+		new TerserPlugin({ extractComments: false }),
+		new webpack.ProvidePlugin({}),
 		// new BundleAnalyzerPlugin(),
-		// new webpack.LoaderOptionsPlugin({
-		// 	minimize: true
-		// })
-	]);
+		new webpack.LoaderOptionsPlugin({
+			minimize: true,
+		}),
+	];
 }
