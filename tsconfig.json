@@ -1,8 +1,10 @@
 {
 	"compilerOptions": {
-		"module": "CommonJS",
-		"target": "es2016",
+		"jsx": "preserve",
+		"module": "esnext",
+		"target": "esnext",
 		"moduleResolution": "node",
+		"sourceMap": false,
 		"noUncheckedIndexedAccess": true,
 		"allowSyntheticDefaultImports": true,
 		"esModuleInterop": true,

@@ -4,6 +4,14 @@ const webpack = require("webpack");
 const TerserPlugin = require("terser-webpack-plugin");
 // const BundleAnalyzerPlugin = require("webpack-bundle-analyzer").BundleAnalyzerPlugin;
 
+const terserOptions = {
+	extractComments: false,
+	terserOptions: {
+		mangle: true,
+		format: { comments: false },
+	},
+};
+
 module.exports = {
 	mode: "production",
 	devtool: "eval-cheap-source-map",
@@ -22,7 +30,7 @@ module.exports = {
 		extensions: [".ts", ".js"],
 	},
 	optimization: {
-		minimizer: [new TerserPlugin({ extractComments: false })],
+		minimizer: [new TerserPlugin(terserOptions)],
 		// minimize: false,
 	},
 	output: {
@@ -76,7 +84,7 @@ if (process.env.NODE_ENV === "production") {
 	module.exports.plugins = [
 		...(module.exports?.plugins ?? []),
 		new webpack.DefinePlugin({ "process.env": { NODE_ENV: '"production"' } }),
-		new TerserPlugin({ extractComments: false }),
+		new TerserPlugin(terserOptions),
 		new webpack.ProvidePlugin({}),
 		// new BundleAnalyzerPlugin(),
 		new webpack.LoaderOptionsPlugin({

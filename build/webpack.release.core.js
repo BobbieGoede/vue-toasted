@@ -2,6 +2,13 @@ const path = require("path");
 const webpack = require("webpack");
 const { VueLoaderPlugin } = require("vue-loader");
 const TerserPlugin = require("terser-webpack-plugin");
+const terserOptions = {
+	extractComments: false,
+	terserOptions: {
+		mangle: true,
+		format: { comments: false },
+	},
+};
 
 module.exports = {
 	mode: "production",
@@ -16,7 +23,7 @@ module.exports = {
 		noInfo: true,
 	},
 	optimization: {
-		minimizer: [new TerserPlugin({ extractComments: false })],
+		minimizer: [new TerserPlugin(terserOptions)],
 		// minimize: false,
 	},
 	resolve: {
@@ -74,7 +81,7 @@ if (process.env.NODE_ENV === "production") {
 	module.exports.plugins = [
 		...(module.exports?.plugins ?? []),
 		new webpack.DefinePlugin({ "process.env": { NODE_ENV: '"production"' } }),
-		new TerserPlugin({ extractComments: false }),
+		new TerserPlugin(terserOptions),
 		new webpack.ProvidePlugin({}),
 		// new BundleAnalyzerPlugin(),
 		new webpack.LoaderOptionsPlugin({
