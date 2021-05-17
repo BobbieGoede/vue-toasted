@@ -1,7 +1,7 @@
 import { ToastNotification } from "./show";
 import animations from "./animations";
 import uuid from "shortid";
-import { IToasted, IToastObject, ToastElement, IToastOptions } from "src/types";
+import { IToasted, IToastObject, ToastElement, IToastOptions } from "../types";
 
 /**
  * Toast

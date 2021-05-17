@@ -9,7 +9,7 @@ import {
 	ToastIconPack,
 	ToastIconPackObject,
 	IToastObject,
-} from "src/types";
+} from "../types";
 import { Toasted } from "./toast";
 
 class ToastOptions implements IToastOptions {

@@ -1,5 +1,5 @@
 import anime from "animejs";
-import { IToastObject } from "src/types";
+import { IToastObject } from "../types";
 
 const duration = 300;
 
