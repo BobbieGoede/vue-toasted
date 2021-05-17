@@ -2,14 +2,12 @@ import { PluginFunction } from "vue";
 
 export type ToastElement = HTMLDivElement & { hash?: string };
 export interface IToastObject {
-	isDisposed: boolean;
 	instance: IToasted;
 	el: ToastElement;
 
 	text(text: string | Node): any;
 	goAway(delay?: number): any;
 	remove(): void;
-	disposed(): boolean;
 }
 
 export type ToastPosition = "top-right" | "top-center" | "top-left" | "bottom-right" | "bottom-center" | "bottom-left";
@@ -115,16 +113,14 @@ export interface IToastOptions {
 	iconPack?: ToastIconPackObject | ToastIconPack | string;
 	router?: any;
 	customNotifications?: Record<"show" | "success" | "info" | "error", any>;
-	globalToasts?: Record<string, (payload, initiate) => IToasted>;
+	globalToasts?: Record<string, (payload, initiate) => IToastObject>;
 }
 
 export interface IToasted {
 	id: string;
 	options: IToastOptions;
 	cachedOptions: IToastOptions;
-	global: Record<string, any>;
-	globalToasts: Record<string, IToasted>;
-	groups: IToasted[];
+	global: Record<string, (payload: IToastOptions) => IToastObject>;
 	toasts: IToastObject[];
 	container: HTMLElement;
 
@@ -173,7 +169,6 @@ export interface IToasted {
 	 */
 	clear(onClear?: () => void): boolean;
 	remove(el: ToastElement): void;
-	group(o): IToasted;
 }
 
 declare class ToastedPlugin {

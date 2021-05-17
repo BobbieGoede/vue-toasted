@@ -8,20 +8,11 @@ import { IToasted, IToastObject, ToastElement, IToastOptions } from "src/types";
  * core instance of toast
  */
 export class Toasted implements IToasted {
-	/* Unique id of the toast */
 	id: string;
-	/* Shared Options of the Toast */
 	options: IToastOptions = {};
-	/* Cached Options of the Toast */
 	cachedOptions: Record<string, any> = {};
-	/* Shared Toasts list */
-	global: Record<string, any> = {};
-	globalToasts: Record<string, IToasted> = {};
-	/* All Registered Groups */
-	groups: IToasted[] = [];
-	/* All Registered Toasts */
+	global: Record<string, (payload: IToastOptions) => IToastObject> = {};
 	toasts: IToastObject[] = [];
-	/* Element of the Toast Container */
 	container: HTMLElement = null;
 	configurations: Record<string, IToastOptions> = {
 		show: {},
@@ -30,28 +21,17 @@ export class Toasted implements IToasted {
 		error: { type: "error" },
 	};
 
-	constructor(_options: IToastOptions) {
+	constructor(options: IToastOptions) {
 		this.id = uuid.generate();
-		this.options = _options;
+		this.options = options;
 
 		this.initializeToastContainer();
 		this.initializeCustomToasts();
 
-		this.configurations = { ...this.configurations, ..._options?.configurations };
-		const configs = this.options.customNotifications ?? {};
-		Object.keys(this.configurations).forEach((x) => {
-			this.configurations[x] = { ...this.configurations[x], ...configs[x] };
+		const configs = this.options?.configurations ?? {};
+		Object.keys(configs).forEach((x) => {
+			this.configurations[x] = { ...this.configurations?.[x], ...configs[x] };
 		});
-	}
-
-	group(o: IToastOptions) {
-		o ??= { globalToasts: {} };
-		o.globalToasts = { ...o.globalToasts, ...this.global };
-
-		const group = new Toasted(o);
-		this.groups.push(group);
-
-		return group;
 	}
 
 	register(name: string, payload: any, options: IToastOptions = {}) {
@@ -87,6 +67,7 @@ export class Toasted implements IToasted {
 
 	remove(el: ToastElement) {
 		this.toasts = this.toasts.filter((t) => t.el.hash !== el.hash);
+
 		if (el.parentNode) {
 			el.parentNode.removeChild(el);
 		}
@@ -148,10 +129,11 @@ export class Toasted implements IToasted {
 
 		if (customToasts) {
 			this.global = {};
+
 			const customToastNames = Object.keys(customToasts);
 			customToastNames.forEach((name) => {
 				// register the custom toast events to the Toast.custom property
-				this.global[name] = (payload = {}) => {
+				this.global[name] = (payload: IToastOptions = {}): IToastObject => {
 					// return the it in order to expose the Toast methods
 					// return customToasts[key].apply(null, [payload, initiate]);
 					return customToasts[name](payload, initiate);
@@ -161,7 +143,6 @@ export class Toasted implements IToasted {
 	}
 
 	initializeToastContainer() {
-		// create notification container
 		const container = document.createElement("div");
 		container.id = this.id;
 		container.setAttribute("role", "status");

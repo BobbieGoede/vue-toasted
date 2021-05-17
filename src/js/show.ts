@@ -8,9 +8,8 @@ import {
 	ToastPosition,
 	ToastIconPack,
 	ToastIconPackObject,
-	IToastObject
+	IToastObject,
 } from "src/types";
-import { ToastObject } from "./object";
 import { Toasted } from "./toast";
 
 class ToastOptions implements IToastOptions {
@@ -55,19 +54,21 @@ export class ToastNotification implements IToastObject {
 	el: ToastElement;
 	instance: Toasted = null;
 	options: ToastOptions = null;
-	isDisposed: boolean = false;
+
+	get container() {
+		return this.instance.container;
+	}
 
 	constructor(instance: Toasted, message: string | HTMLElement, options: Record<string, any>) {
 		this.instance = instance;
 		this.options = new ToastOptions(options);
 
-		const container = this.instance.container;
 		this.options.containerClass = ["toasted-container", ...this.options.containerClass];
 
 		// check if the container classes has changed if so update it
-		if (container.className !== this.options.containerClass.join(" ")) {
-			container.className = "";
-			this.options.containerClass.forEach(className => container.classList.add(className));
+		if (this.container.className !== this.options.containerClass.join(" ")) {
+			this.container.className = "";
+			this.options.containerClass.forEach((className) => this.container.classList.add(className));
 		}
 
 		// Select and append toast
@@ -75,7 +76,7 @@ export class ToastNotification implements IToastObject {
 
 		// only append toast if message is not undefined
 		if (message) {
-			container.appendChild(this.el);
+			this.container.appendChild(this.el);
 		}
 
 		this.el.style.opacity = "0";
@@ -98,7 +99,7 @@ export class ToastNotification implements IToastObject {
 
 					if (timeLeft <= 0) {
 						// Animate toast out
-						animations.animateOut(this.el, function() {
+						animations.animateOut(this.el, () => {
 							// Call the optional callback
 							if (typeof this.options.onComplete === "function") this.options.onComplete();
 							// Remove toast after it times out
@@ -130,8 +131,6 @@ export class ToastNotification implements IToastObject {
 	}
 
 	goAway(delay = 800) {
-		this.isDisposed = true;
-
 		// Animate toast out
 		setTimeout(() => {
 			// if the toast is on bottom set it as bottom animation
@@ -150,17 +149,13 @@ export class ToastNotification implements IToastObject {
 		this.instance.remove(this.el);
 	}
 
-	disposed() {
-		return this.isDisposed;
-	}
-
 	createElement(html: HTMLElement | string, options: IToastOptions): ToastElement {
 		const toastElement: ToastElement = document.createElement("div");
 		toastElement.classList.add("toasted");
 		toastElement.hash = uuid.generate();
 
 		if (options.className && Array.isArray(options.className)) {
-			options.className.forEach(className => toastElement.classList.add(className));
+			options.className.forEach((className) => toastElement.classList.add(className));
 		}
 
 		if (html instanceof HTMLElement) {
@@ -185,7 +180,7 @@ export class ToastNotification implements IToastObject {
 		if (options.closeOnSwipe) {
 			const hammerHandler = new Hammer(toastElement);
 
-			hammerHandler.on("pan", e => {
+			hammerHandler.on("pan", (e) => {
 				const deltaX = e.deltaX;
 				const activationDistance = 80;
 
@@ -200,19 +195,19 @@ export class ToastNotification implements IToastObject {
 				animations.animatePanning(toastElement, deltaX, opacityPercent);
 			});
 
-			hammerHandler.on("panend", e => {
+			hammerHandler.on("panend", (e) => {
 				const deltaX = e.deltaX;
 				const activationDistance = 80;
 
 				// If toast dragged past activation point
 				if (Math.abs(deltaX) > activationDistance) {
-					animations.animatePanEnd(toastElement, function() {
+					animations.animatePanEnd(toastElement, () => {
 						if (typeof options.onComplete === "function") {
 							options.onComplete();
 						}
 
-						if (this.element.parentNode) {
-							this.instance.remove(this.element);
+						if (toastElement.parentNode) {
+							this.instance.remove(toastElement);
 						}
 					});
 				} else {
@@ -226,7 +221,7 @@ export class ToastNotification implements IToastObject {
 		// create and append actions
 		if (options.action) {
 			options.action = Array.isArray(options.action) ? options.action : [options.action];
-			options.action.forEach(action => {
+			options.action.forEach((action) => {
 				const el = this.createAction(action, this);
 				if (el) toastElement.appendChild(el);
 			});
@@ -256,7 +251,7 @@ export class ToastNotification implements IToastObject {
 					break;
 				case "custom-class":
 					let classArray = Array.isArray(iconClass) ? iconClass : iconClass.split(" ");
-					classArray.forEach(className => iconEl.classList.add(className.trim()));
+					classArray.forEach((className) => iconEl.classList.add(className.trim()));
 
 					break;
 				case "callback":
@@ -274,7 +269,7 @@ export class ToastNotification implements IToastObject {
 
 		if (typeof options.iconPack === "object") {
 			const iconClasses = options.iconPack.classes ?? ["material-icons"];
-			iconClasses.forEach(iconClass => iconEl.classList.add(iconClass));
+			iconClasses.forEach((iconClass) => iconEl.classList.add(iconClass));
 
 			if (options.iconPack.textContent) {
 				iconEl.textContent = options.icon?.name ?? options.icon;
@@ -288,7 +283,7 @@ export class ToastNotification implements IToastObject {
 		return iconEl;
 	}
 
-	createAction(action: IToastAction, toastObject: ToastObject) {
+	createAction(action: IToastAction, toastObject: IToastObject) {
 		const el = document.createElement(action.href ? "a" : "button");
 
 		el.classList.add("action");
@@ -326,7 +321,7 @@ export class ToastNotification implements IToastObject {
 
 						break;
 					case "custom-class":
-						action.icon.split(" ").forEach(className => el.classList.add(className));
+						action.icon.split(" ").forEach((className) => el.classList.add(className));
 
 						break;
 					default:
@@ -337,7 +332,7 @@ export class ToastNotification implements IToastObject {
 
 			if (typeof this.options.iconPack === "object") {
 				const iconClasses = this.options.iconPack?.classes ?? ["material-icons"];
-				iconClasses.forEach(iconClass => iconEl.classList.add(iconClass));
+				iconClasses.forEach((iconClass) => iconEl.classList.add(iconClass));
 
 				if (this.options.iconPack.textContent) {
 					iconEl.textContent = action.icon;
@@ -349,12 +344,12 @@ export class ToastNotification implements IToastObject {
 
 		if (action.class) {
 			const actionClasses = Array.isArray(action.class) ? action.class : action.class.split(" ");
-			actionClasses.forEach(className => el.classList.add(className.trim()));
+			actionClasses.forEach((className) => el.classList.add(className.trim()));
 		}
 
 		// initiate push with ready
 		if (action.push) {
-			el.addEventListener("click", e => {
+			el.addEventListener("click", (e) => {
 				e.preventDefault();
 
 				// check if vue router passed through global options
@@ -374,7 +369,7 @@ export class ToastNotification implements IToastObject {
 		}
 
 		if (typeof action.onClick === "function") {
-			el.addEventListener("click", e => {
+			el.addEventListener("click", (e) => {
 				e.preventDefault();
 				action.onClick(e, toastObject);
 			});
