@@ -11,10 +11,9 @@ const Toasted = {
 		Vue.toasted = Vue.prototype.$toasted = Toast;
 		Vue.toasts = Vue.prototype.$toasts = (id, message, options) => Toast.notify(id, message, options);
 		// Vue.config.globalProperties.$toasted = Toast;
-	}
+	},
 };
 
-console.log("installing!");
 // register plugin if it is used via cdn or directly as a script tag
 if (typeof window !== "undefined" && window.Vue) {
 	window.Toasted = Toasted;
