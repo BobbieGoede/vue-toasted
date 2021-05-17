@@ -2,22 +2,31 @@ const path = require("path");
 const MiniCssExtractPlugin = require("mini-css-extract-plugin");
 
 module.exports = {
+	mode: "production",
 	entry: {
 		"vue-toasted.min": "./src/sass/toast.scss",
 	},
-	// output: {
-	// 	path: path.resolve(__dirname, "../dist"),
-	// 	publicPath: "/dist/",
-	// 	filename: "[name].css",
-	// 	libraryTarget: "umd",
-	// },
-	plugins: [
-		new MiniCssExtractPlugin({
-			filename: "[name].css",
-			chunkFilename: "[id].css",
-		}),
-	],
-	mode: "production",
+	optimization: {
+		splitChunks: {
+			cacheGroups: {
+				styles: {
+					name: "styles",
+					type: "css/mini-extract",
+					// For webpack@4
+					// test: /\.css$/,
+					chunks: "all",
+					enforce: true,
+				},
+			},
+		},
+	},
+	output: {
+		path: path.resolve(__dirname, "../dist"),
+		publicPath: "./dist/",
+		filename: "[name].css",
+		libraryTarget: "umd",
+	},
+	plugins: [new MiniCssExtractPlugin()],
 	module: {
 		rules: [
 			{
@@ -33,9 +42,6 @@ module.exports = {
 				},
 			},
 		],
-	},
-	performance: {
-		hints: false,
 	},
 };
 
