@@ -80,12 +80,7 @@ if (process.env.NODE_ENV === "production") {
 	// http://vue-loader.vuejs.org/en/workflow/production.html
 	module.exports.plugins = [
 		...(module.exports?.plugins ?? []),
-		new webpack.DefinePlugin({ "process.env": { NODE_ENV: '"production"' } }),
 		new TerserPlugin(terserOptions),
-		new webpack.ProvidePlugin({}),
 		// new BundleAnalyzerPlugin(),
-		new webpack.LoaderOptionsPlugin({
-			minimize: true,
-		}),
 	];
 }
