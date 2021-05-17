@@ -1,4 +1,4 @@
-import Hammer from "hammerjs";
+import { Manager } from "@egjs/hammerjs";
 import animations from "./animations";
 import uuid from "shortid";
 import {
@@ -178,7 +178,7 @@ export class ToastNotification implements IToastObject {
 		}
 
 		if (options.closeOnSwipe) {
-			const hammerHandler = new Hammer(toastElement);
+			const hammerHandler = new Manager(toastElement);
 
 			hammerHandler.on("pan", (e) => {
 				const deltaX = e.deltaX;
