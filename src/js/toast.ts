@@ -1,4 +1,4 @@
-import { ToastNotification } from "./show";
+import { ToastNotification, ToastOptions } from "./show";
 import animations from "./animations";
 import uuid from "shortid";
 import { IToasted, IToastObject, ToastElement, IToastOptions } from "../types";
@@ -9,12 +9,12 @@ import { IToasted, IToastObject, ToastElement, IToastOptions } from "../types";
  */
 export class Toasted implements IToasted {
 	id: string;
-	options: IToastOptions = {};
+	options: ToastOptions = {};
 	cachedOptions: Record<string, any> = {};
-	global: Record<string, (payload: IToastOptions) => IToastObject> = {};
+	global: Record<string, (payload: ToastOptions) => IToastObject> = {};
 	toasts: IToastObject[] = [];
 	container: HTMLElement = null;
-	configurations: Record<string, IToastOptions> = {
+	configurations: Record<string, ToastOptions> = {
 		show: {},
 		info: { type: "info" },
 		success: { type: "success" },
@@ -23,7 +23,7 @@ export class Toasted implements IToasted {
 
 	constructor(options: IToastOptions) {
 		this.id = uuid.generate();
-		this.options = options;
+		this.options = new ToastOptions(options);
 
 		this.initializeToastContainer();
 		this.initializeCustomToasts();
@@ -34,43 +34,39 @@ export class Toasted implements IToasted {
 		});
 	}
 
-	register(name: string, payload: any, options: IToastOptions = {}) {
+	register(name: string, payload: any, options: ToastOptions = {}) {
 		return this.registerToast(name, payload, options);
 	}
 
-	notify(id: string, message: string, options: IToastOptions = {}) {
+	notify(id: string, message: string, options: ToastOptions = {}) {
 		const config = this.configurations?.[id] ?? {};
-		return this.showToast(message, { ...config, ...options });
+		return this.showToast(message, new ToastOptions({ ...config, ...options }));
 	}
 
-	setConfiguration(id: string, options: IToastOptions = {}) {
-		this.configurations[id] = { ...options };
-
+	setConfiguration(id: string, options: ToastOptions = {}, extend: boolean = true) {
+		this.configurations[id] = { ...(extend ? this.configurations[id] : {}), ...options };
 		return this.configurations[id];
 	}
 
-	show(message: string, options: IToastOptions = {}) {
+	show(message: string, options: ToastOptions = {}) {
 		return this.notify("show", message, options);
 	}
 
-	success(message: string, options: IToastOptions = {}) {
+	success(message: string, options: ToastOptions = {}) {
 		return this.notify("success", message, options);
 	}
 
-	info(message: string, options: IToastOptions = {}) {
+	info(message: string, options: ToastOptions = {}) {
 		return this.notify("info", message, options);
 	}
 
-	error(message: string, options: IToastOptions = {}) {
+	error(message: string, options: ToastOptions = {}) {
 		return this.notify("error", message, options);
 	}
 
 	remove(el: ToastElement) {
 		this.toasts = this.toasts.filter((t) => t.el.hash !== el.hash);
-
-		if (el.parentNode) {
-			el.parentNode.removeChild(el);
-		}
+		el.parentNode?.removeChild(el);
 	}
 
 	/* Clear All Toasts */
@@ -81,7 +77,7 @@ export class Toasted implements IToasted {
 		return true;
 	}
 
-	showToast(message: string | HTMLElement, options: IToastOptions = {}) {
+	showToast(message: string | HTMLElement, options: ToastOptions = {}) {
 		// singleton feature
 		if (this.options.singleton && this.toasts.length > 0) {
 			this.cachedOptions = options;
@@ -95,8 +91,7 @@ export class Toasted implements IToasted {
 		return toast;
 	}
 
-	registerToast(name: string, callback: (arg0: any) => any, options: IToastOptions) {
-		this.options.globalToasts ??= {};
+	registerToast(name: string, callback: (arg0: any) => any, options: ToastOptions) {
 		this.options.globalToasts[name] = function (payload, initiate) {
 			// if callback is a string we will keep it that way..
 			if (typeof callback === "string") {
@@ -112,10 +107,8 @@ export class Toasted implements IToasted {
 	}
 
 	initializeCustomToasts() {
-		const customToasts = this.options.globalToasts;
-
 		// this will initiate toast for the custom toast.
-		const initiate = (message: string | HTMLElement, options: string | IToastOptions) => {
+		const initiate = (message: string | HTMLElement, options: string | ToastOptions) => {
 			// Use default notification function to display toast
 			if (typeof options === "string") {
 				if (["success", "info", "error"].includes(options)) {
@@ -127,29 +120,20 @@ export class Toasted implements IToasted {
 			}
 		};
 
-		if (customToasts) {
-			this.global = {};
-
-			const customToastNames = Object.keys(customToasts);
-			customToastNames.forEach((name) => {
-				// register the custom toast events to the Toast.custom property
-				this.global[name] = (payload: IToastOptions = {}): IToastObject => {
-					// return the it in order to expose the Toast methods
-					// return customToasts[key].apply(null, [payload, initiate]);
-					return customToasts[name](payload, initiate);
-				};
-			});
-		}
+		this.global = {};
+		Object.keys(this.options.globalToasts).forEach((name) => {
+			// register the custom toast events to the Toast.custom property
+			this.global[name] = (payload = {}): IToastObject => this.options.globalToasts[name](payload, initiate);
+		});
 	}
 
 	initializeToastContainer() {
-		const container = document.createElement("div");
-		container.id = this.id;
-		container.setAttribute("role", "status");
-		container.setAttribute("aria-live", "polite");
-		container.setAttribute("aria-atomic", "false");
+		this.container = document.createElement("div");
+		this.container.id = this.id;
+		this.container.setAttribute("role", "status");
+		this.container.setAttribute("aria-live", "polite");
+		this.container.setAttribute("aria-atomic", "false");
 
-		document.body.appendChild(container);
-		this.container = container;
+		document.body.appendChild(this.container);
 	}
 }
