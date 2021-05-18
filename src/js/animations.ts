@@ -1,13 +1,13 @@
-import anime from "animejs";
+import anime from "animejs/lib/anime.es.js";
 import { IToastObject } from "../types";
 
-const duration = 300;
+const duration = 166;
 
 export default {
 	animateIn(el) {
 		anime({
 			targets: el,
-			translateY: "-35px",
+			translateY: "-32px",
 			opacity: 1,
 			duration: duration,
 			easing: "easeOutCubic",
@@ -17,7 +17,7 @@ export default {
 		anime({
 			targets: el,
 			opacity: 0,
-			marginTop: "-40px",
+			marginTop: "-32px",
 			duration: duration,
 			easing: "easeOutExpo",
 			complete: onComplete,
@@ -27,7 +27,7 @@ export default {
 		anime({
 			targets: el,
 			opacity: 0,
-			marginBottom: "-40px",
+			marginBottom: "-32px",
 			duration: duration,
 			easing: "easeOutExpo",
 			complete: onComplete,
@@ -45,7 +45,7 @@ export default {
 	animatePanning(el, left, opacity) {
 		anime({
 			targets: el,
-			duration: 10,
+			duration: 1,
 			easing: "easeOutQuad",
 			left: left,
 			opacity: opacity,
@@ -67,8 +67,8 @@ export default {
 			timeline.add({
 				targets: t.el,
 				opacity: 0,
-				right: "-40px",
-				duration: 300,
+				right: "-32px",
+				duration: duration * 1.5,
 				offset: "-=150",
 				easing: "easeOutExpo",
 				complete: () => {
