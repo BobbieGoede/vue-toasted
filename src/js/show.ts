@@ -12,34 +12,41 @@ import {
 } from "../types";
 import { Toasted } from "./toast";
 
-class ToastOptions implements IToastOptions {
-	onComplete = null;
-	position: ToastPosition = "top-right";
-	duration = null;
-	keepOnHover = false;
-	theme = "primary";
-	type = "default";
-	containerClass: string[] = [];
-	icon = null;
-	action = null;
-	closeOnSwipe = true;
-	iconPack: string | ToastIconPack | ToastIconPackObject = "material";
-	className: string[] = [];
-	router: any = null;
+export class ToastOptions implements IToastOptions {
+	onComplete? = null;
+	position?: ToastPosition = "top-right";
+	duration? = null;
+	keepOnHover? = true;
+	theme? = null;
+	type? = null;
+	containerClass?: string[] = ["toasted-container"];
+	icon? = null;
+	action? = null;
+	closeOnSwipe? = true;
+	iconPack?: string | ToastIconPack | ToastIconPackObject = "material";
+	className?: string[] = [];
+	router?: any = null;
+	configurations?: Record<string, ToastOptions> = {};
+	singleton?: boolean = false;
+	globalToasts?: Record<string, (payload, initiate) => IToastObject> = {};
 
 	constructor(o: IToastOptions) {
+		this.theme = o.theme ?? "primary";
+		this.type = o.type ?? "default";
+		this.position = o.position ?? "top-right";
+		this.iconPack = o.iconPack ?? "material";
+
 		if (o.onComplete) this.onComplete = o.onComplete;
-		if (o.position) this.position = o.position;
 		if (o.duration) this.duration = o.duration;
 		if (o.keepOnHover) this.keepOnHover = o.keepOnHover;
-		if (o.theme) this.theme = o.theme;
-		if (o.type) this.type = o.type;
 		if (o.icon) this.icon = o.icon;
 		if (o.action) this.action = o.action;
 		if (o.closeOnSwipe) this.closeOnSwipe = o.closeOnSwipe;
-		if (o.iconPack) this.iconPack = o.iconPack;
 		if (typeof o.className === "string") this.className = o.className.split(" ");
-		if (typeof o.containerClass === "string") this.containerClass = o.containerClass.split(" ");
+		if (typeof o.containerClass === "string") this.containerClass.push(...o.containerClass.split(" "));
+		Object.keys(o?.configurations ?? {}).forEach((x) => {
+			this.configurations[x] = new ToastOptions(o.configurations[x]);
+		});
 
 		if (this.theme) this.className.push(`toasted--${this.theme.trim()}`);
 		if (this.type) this.className.push(this.type);
@@ -64,8 +71,6 @@ export class ToastNotification implements IToastObject {
 		this.instance = instance;
 		this.options = new ToastOptions(options);
 
-		this.options.containerClass = ["toasted-container", ...this.options.containerClass];
-
 		// check if the container classes has changed if so update it
 		if (this.container.className !== this.options.containerClass.join(" ")) {
 			this.container.className = "";
@@ -74,13 +79,12 @@ export class ToastNotification implements IToastObject {
 
 		// Select and append toast
 		this.el = this.createElement(message, this.options);
+		this.el.style.opacity = "0";
 
 		// only append toast if message is not undefined
 		if (message) {
 			this.container.appendChild(this.el);
 		}
-
-		this.el.style.opacity = "0";
 
 		// Animate toast in
 		animations.animateIn(this.el);
@@ -122,7 +126,7 @@ export class ToastNotification implements IToastObject {
 
 	text(text: string | Node = "") {
 		if (text instanceof Node) this.el.appendChild(text);
-		if (typeof text === "string") this.el.innerHTML = text;
+		else this.el.innerHTML = text;
 
 		return this;
 	}
@@ -160,7 +164,7 @@ export class ToastNotification implements IToastObject {
 			toastElement.appendChild(html);
 		} else {
 			const messageElement = document.createElement("span");
-			messageElement.classList.add("toasted-message");
+			messageElement.classList.add("toasted__message");
 			messageElement.innerHTML = html;
 			toastElement.appendChild(messageElement);
 		}
@@ -232,7 +236,7 @@ export class ToastNotification implements IToastObject {
 
 					break;
 				case "custom-class":
-					let classArray = Array.isArray(iconClass) ? iconClass : iconClass.split(" ");
+					const classArray = Array.isArray(iconClass) ? iconClass : iconClass.split(" ");
 					classArray.forEach((className) => iconEl.classList.add(className.trim()));
 
 					break;
@@ -268,7 +272,7 @@ export class ToastNotification implements IToastObject {
 	createAction(action: IToastAction, toastObject: IToastObject) {
 		const el = document.createElement(action.href ? "a" : "button");
 
-		el.classList.add("action");
+		el.classList.add("toasted__action");
 		el.classList.add("ripple");
 
 		if (el instanceof HTMLButtonElement) {
@@ -321,7 +325,7 @@ export class ToastNotification implements IToastObject {
 				}
 			}
 
-			el.appendChild(iconEl);
+			el.prepend(iconEl);
 		}
 
 		if (action.class) {
@@ -339,7 +343,6 @@ export class ToastNotification implements IToastObject {
 					console.warn("[vue-toasted] : Vue Router instance is not attached. please check the docs");
 					return;
 				}
-				console.log(this.options);
 
 				this.options.router.push(action.push);
 

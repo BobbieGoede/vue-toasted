@@ -76,3 +76,14 @@
 		transition: 0s;
 	}
 }
+
+@mixin icon-classes {
+	.material-icons,
+	.fa,
+	.fas,
+	.far,
+	.fab,
+	.mdi {
+		@content;
+	}
+}

@@ -1,5 +1,4 @@
 @import "mixins";
-@import "themes";
 
 .toasted-container {
 	// fix for min-height bug in IE
@@ -7,6 +6,14 @@
 	flex-direction: column;
 	position: fixed;
 	z-index: 10000;
+
+	&:hover {
+		cursor: grab;
+	}
+
+	&:active {
+		cursor: grabbing;
+	}
 
 	&.full-width {
 		display: flex;
@@ -24,6 +31,7 @@
 	&.top-left,
 	&.top-center {
 		top: 1rem;
+		padding-top: -8px;
 	}
 
 	// Positioning
@@ -89,73 +97,72 @@
 		justify-content: space-between;
 		box-sizing: inherit;
 
-		.material-icons,
-		.fa,
-		.fas,
-		.far,
-		.fab,
-		.mdi {
-			margin-right: 0.5rem;
-			margin-left: -0.4rem;
-
-			&.after {
-				margin-left: 0.5rem;
-				margin-right: -0.4rem;
-			}
+		&:first-of-type {
+			margin-top: 0px;
 		}
+	}
+}
 
-		button {
-			background: none;
-			color: inherit;
-			border: none;
-			font: inherit;
-			line-height: normal;
+.toasted {
+	@include icon-classes {
+		margin-right: 12px;
+		// margin-left: -8px;
+
+		&.after {
+			margin-left: 16px;
+			margin-right: -8px;
 		}
+	}
 
-		// Toast Action Styling
-		.action {
-			text-decoration: none;
-			font-size: 0.8rem;
-			padding: 8px;
-			margin: 5px -7px 5px 7px;
-			border-radius: 3px;
-			text-transform: uppercase;
-			letter-spacing: 0.03em;
-			font-weight: 600;
-			cursor: pointer;
+	&__message {
+		flex: 1 0;
+		padding: 10px 0px;
+	}
 
-			// Reset button style
-			//   @at-root #{selector-unify(&, button)} {
-			// button {
-			//     background: none;
-			//     color: inherit;
-			//     border: none;
-			//     font: inherit;
-			//     line-height: normal;
-			// }
-			//   }
+	// Toast Action Styling
+	&__action {
+		text-decoration: none;
+		font-size: 13px;
+		padding: 0px 8px;
+		min-height: 32px;
+		border-radius: 4px;
+		text-transform: uppercase;
+		letter-spacing: 1.25px;
+		font-weight: 500;
+		cursor: pointer;
+		margin-right: -10px;
+		margin-left: 16px;
 
-			&.icon {
-				padding: 4px;
-				display: flex;
-				align-items: center;
-				justify-content: center;
+		background: none;
+		color: inherit;
+		border: none;
+		font: inherit;
+		line-height: normal;
 
-				.material-icons,
-				.fa,
-				.mdi {
-					margin-right: 0;
-					margin-left: 4px;
-				}
+		&.icon {
+			display: flex;
+			align-items: center;
+			justify-content: center;
 
-				&:hover {
-					text-decoration: none;
-				}
+			@include icon-classes {
+				margin-left: -4px;
+				margin-right: 8px;
+				font-size: 18px;
+				width: 18px;
+				height: 18px;
 			}
 
 			&:hover {
-				text-decoration: underline;
+				text-decoration: none;
 			}
+		}
+
+		&:hover {
+			background-color: rgba(255, 255, 255, 0.2);
+		}
+
+		&:active {
+			background-color: rgba(255, 255, 255, 0.1);
 		}
 	}
 }
