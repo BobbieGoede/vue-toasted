@@ -4,7 +4,7 @@
 		"module": "esnext",
 		"target": "esnext",
 		"moduleResolution": "node",
-		"sourceMap": false,
+		"sourceMap": true,
 		"noUncheckedIndexedAccess": true,
 		"allowSyntheticDefaultImports": true,
 		"esModuleInterop": true,
