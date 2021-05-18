@@ -1,1 +1,1 @@
-<style src="./sass/toast.scss" lang="scss"> </style>
+<style src="./sass/main.scss" lang="scss"></style>
