@@ -1,4 +1,4 @@
-import { Manager } from "@egjs/hammerjs";
+import { Manager, Pan } from "@egjs/hammerjs";
 import animations from "./animations";
 import uuid from "shortid";
 import {
@@ -54,6 +54,7 @@ export class ToastNotification implements IToastObject {
 	el: ToastElement;
 	instance: Toasted = null;
 	options: ToastOptions = null;
+	hammerHandler: HammerManager = null;
 
 	get container() {
 		return this.instance.container;
@@ -146,6 +147,7 @@ export class ToastNotification implements IToastObject {
 	}
 
 	remove() {
+		this.hammerHandler.destroy();
 		this.instance.remove(this.el);
 	}
 
@@ -178,41 +180,25 @@ export class ToastNotification implements IToastObject {
 		}
 
 		if (options.closeOnSwipe) {
-			const hammerHandler = new Manager(toastElement);
+			this.hammerHandler = new Manager(toastElement, { domEvents: true, recognizers: [[Pan]] });
+			const activationDistance = 80;
 
-			hammerHandler.on("pan", (e) => {
-				const deltaX = e.deltaX;
-				const activationDistance = 80;
+			this.hammerHandler.on("pan", (e) => {
+				toastElement.classList.add("panning");
 
-				// Change toast state
-				if (!toastElement.classList.contains("panning")) {
-					toastElement.classList.add("panning");
-				}
-
-				let opacityPercent = 1 - Math.abs(deltaX / activationDistance);
-				if (opacityPercent < 0) opacityPercent = 0;
-
-				animations.animatePanning(toastElement, deltaX, opacityPercent);
+				const opacityPercent = Math.max(1 - Math.abs(e.deltaX / activationDistance), 0);
+				animations.animatePanning(toastElement, e.deltaX, opacityPercent);
 			});
 
-			hammerHandler.on("panend", (e) => {
-				const deltaX = e.deltaX;
-				const activationDistance = 80;
-
+			this.hammerHandler.on("panend", (e) => {
 				// If toast dragged past activation point
-				if (Math.abs(deltaX) > activationDistance) {
+				if (Math.abs(e.deltaX) > activationDistance) {
 					animations.animatePanEnd(toastElement, () => {
-						if (typeof options.onComplete === "function") {
-							options.onComplete();
-						}
-
-						if (toastElement.parentNode) {
-							this.instance.remove(toastElement);
-						}
+						options?.onComplete?.();
+						this.instance.remove(toastElement);
 					});
 				} else {
 					toastElement.classList.remove("panning");
-					// Put toast back into original position
 					animations.animateReset(toastElement);
 				}
 			});
