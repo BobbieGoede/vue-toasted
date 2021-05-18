@@ -1,9 +1,8 @@
 import Vue from "vue";
-// import VueToasted from "../";
-var Toasted = require("../dist/vue-toasted").default;
+import Toasted from "../src/index";
 import Index from "./index.vue";
 
-Vue.use(Toasted);
+Vue.use(Toasted, { position: "top-right" });
 
 new Vue({
 	el: "#app",
