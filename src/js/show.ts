@@ -101,12 +101,8 @@ export class ToastNotification implements IToastObject {
 					if (timeLeft <= 0) {
 						// Animate toast out
 						animations.animateOut(this.el, () => {
-							// Call the optional callback
-							if (typeof this.options.onComplete === "function") this.options.onComplete();
-							// Remove toast after it times out
-							if (this.el.parentNode) {
-								this.instance.remove(this.el);
-							}
+							this.options.onComplete?.();
+							this.remove();
 						});
 
 						window.clearInterval(counterInterval);
@@ -136,11 +132,11 @@ export class ToastNotification implements IToastObject {
 		setTimeout(() => {
 			// if the toast is on bottom set it as bottom animation
 			if (this.instance.cachedOptions?.position?.includes("bottom")) {
-				animations.animateOutBottom(this.el, () => this.instance.remove(this.el));
+				animations.animateOutBottom(this.el, () => this.remove());
 				return;
 			}
 
-			animations.animateOut(this.el, () => this.instance.remove(this.el));
+			animations.animateOut(this.el, () => this.remove());
 		}, delay);
 
 		return true;
@@ -195,7 +191,7 @@ export class ToastNotification implements IToastObject {
 				if (Math.abs(e.deltaX) > activationDistance) {
 					animations.animatePanEnd(toastElement, () => {
 						options?.onComplete?.();
-						this.instance.remove(toastElement);
+						this.remove();
 					});
 				} else {
 					toastElement.classList.remove("panning");
