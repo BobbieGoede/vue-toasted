@@ -55,15 +55,12 @@ module.exports = {
 		extensions: [".ts", ".js"],
 	},
 	devServer: {
-		historyApiFallback: true,
-		noInfo: true,
-		port: 7777,
+		hot: true,
+		// injectHot: true,
 	},
+	target: "web",
 	mode: "development",
-	devtool: "eval-cheap-source-map",
-	devServer: {
-		disableHostCheck: true,
-	},
+	devtool: "inline-source-map",
 };
 
 if (process.env.NODE_ENV === "production") {

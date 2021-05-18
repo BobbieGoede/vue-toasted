@@ -3,17 +3,9 @@ const path = require("path");
 const TerserPlugin = require("terser-webpack-plugin");
 const BundleAnalyzerPlugin = require("webpack-bundle-analyzer").BundleAnalyzerPlugin;
 
-const terserOptions = {
-	extractComments: false,
-	terserOptions: {
-		mangle: true,
-		format: { comments: false },
-	},
-};
-
 module.exports = {
 	mode: "production",
-	devtool: "eval-cheap-source-map",
+	devtool: "source-map",
 	devServer: {
 		historyApiFallback: true,
 		noInfo: true,
@@ -23,14 +15,21 @@ module.exports = {
 		"vue-toasted.min": "./src/index.ts",
 	},
 	resolve: {
-		alias: {
-			vue$: "vue/dist/vue.esm.js",
-		},
+		alias: { vue$: "vue/dist/vue.esm.js" },
 		extensions: [".ts", ".js"],
 	},
 	optimization: {
-		minimizer: [new TerserPlugin(terserOptions)],
-		// minimize: false,
+		minimize: true,
+		minimizer: [
+			new TerserPlugin({
+				extractComments: false,
+				parallel: true,
+				terserOptions: {
+					mangle: true,
+					format: { comments: false },
+				},
+			}),
+		],
 	},
 	output: {
 		path: path.resolve(__dirname, "../dist"),
@@ -49,7 +48,6 @@ module.exports = {
 						scss: "vue-style-loader!css-loader!postcss-loader!sass-loader",
 						sass: "vue-style-loader!css-loader!postcss-loader!sass-loader?indentedSyntax",
 					},
-					// other vue-loader options go here
 				},
 			},
 			{
@@ -77,12 +75,6 @@ module.exports = {
 	},
 };
 
-if (process.env.NODE_ENV === "production") {
-	module.exports.devtool = "source-map";
-	// http://vue-loader.vuejs.org/en/workflow/production.html
-	module.exports.plugins = [
-		...(module.exports?.plugins ?? []),
-		new TerserPlugin(terserOptions),
-		// new BundleAnalyzerPlugin(),
-	];
+if (process.env.ANALYTICS) {
+	module.exports.plugins.push(new BundleAnalyzerPlugin());
 }
