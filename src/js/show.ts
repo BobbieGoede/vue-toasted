@@ -90,7 +90,7 @@ export class ToastNotification implements IToastObject {
 		let counterInterval;
 		if (timeLeft !== null) {
 			const createInterval = () => {
-				setInterval(() => {
+				return setInterval(() => {
 					if (this.el.parentNode === null) window.clearInterval(counterInterval);
 
 					// If toast is not being dragged, decrease its time remaining
