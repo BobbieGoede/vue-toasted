@@ -5,6 +5,8 @@
 		"target": "esnext",
 		"moduleResolution": "node",
 		"sourceMap": true,
+		"declaration": true,
+		"declarationDir": "./types",
 		"noUncheckedIndexedAccess": true,
 		"allowSyntheticDefaultImports": true,
 		"esModuleInterop": true,
