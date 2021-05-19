@@ -1,5 +1,5 @@
 import anime from "animejs/lib/anime.es.js";
-import { IToastObject } from "../types";
+import { ToastNotification } from "./show";
 
 const duration = 166;
 
@@ -60,7 +60,7 @@ export default {
 			complete: onComplete,
 		});
 	},
-	clearAnimation(toasts: IToastObject[], cb) {
+	clearAnimation(toasts: ToastNotification[], cb) {
 		const timeline = anime.timeline();
 
 		toasts.forEach((t) => {

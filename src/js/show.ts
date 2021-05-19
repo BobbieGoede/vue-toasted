@@ -1,18 +1,16 @@
 import { Manager, Pan } from "@egjs/hammerjs";
 import animations from "./animations";
 import uuid from "shortid";
-import {
-	IToastAction,
-	ToastElement,
-	IToastOptions,
-	ToastPosition,
-	ToastIconPack,
-	ToastIconPackObject,
-	IToastObject,
-} from "../types";
-import { Toasted } from "./toast";
+import { ToastAction, Toasted, ToastElement, ToastIconPack, ToastIconPackObject, ToastPosition } from "./toast";
 
-export class ToastOptions implements IToastOptions {
+export type UserToastOptions = Partial<ToastOptions> & {
+	fullWidth?: boolean;
+	fitToScreen?: boolean;
+	className?: string | string[];
+	containerClass?: string | string[];
+};
+
+export class ToastOptions {
 	onComplete? = null;
 	position?: ToastPosition = "top-right";
 	duration? = null;
@@ -28,9 +26,9 @@ export class ToastOptions implements IToastOptions {
 	router?: any = null;
 	configurations?: Record<string, ToastOptions> = {};
 	singleton?: boolean = false;
-	globalToasts?: Record<string, (payload, initiate) => IToastObject> = {};
+	globalToasts?: Record<string, (payload, initiate) => ToastNotification> = {};
 
-	constructor(o: IToastOptions) {
+	constructor(o: UserToastOptions) {
 		this.theme = o.theme ?? "primary";
 		this.type = o.type ?? "default";
 		this.position = o.position ?? "top-right";
@@ -57,11 +55,12 @@ export class ToastOptions implements IToastOptions {
 	}
 }
 
-export class ToastNotification implements IToastObject {
+export class ToastNotification {
 	el: ToastElement;
 	instance: Toasted = null;
 	options: ToastOptions = null;
 	hammerHandler: HammerManager = null;
+	isPanning = false;
 
 	get container() {
 		return this.instance.container;
@@ -98,7 +97,7 @@ export class ToastNotification implements IToastObject {
 					if (this.el.parentNode === null) window.clearInterval(counterInterval);
 
 					// If toast is not being dragged, decrease its time remaining
-					if (!this.el.classList.contains("panning")) {
+					if (!this.isPanning) {
 						timeLeft -= 20;
 					}
 
@@ -151,7 +150,7 @@ export class ToastNotification implements IToastObject {
 		this.instance.remove(this.el);
 	}
 
-	createElement(html: HTMLElement | string, options: IToastOptions): ToastElement {
+	createElement(html: HTMLElement | string, options: ToastOptions): ToastElement {
 		const toastElement: ToastElement = document.createElement("div");
 		toastElement.classList.add("toasted");
 		toastElement.hash = uuid.generate();
@@ -184,7 +183,7 @@ export class ToastNotification implements IToastObject {
 			const activationDistance = 80;
 
 			this.hammerHandler.on("pan", (e) => {
-				toastElement.classList.add("panning");
+				this.isPanning = true;
 
 				const opacityPercent = Math.max(1 - Math.abs(e.deltaX / activationDistance), 0);
 				animations.animatePanning(toastElement, e.deltaX, opacityPercent);
@@ -198,7 +197,7 @@ export class ToastNotification implements IToastObject {
 						this.remove();
 					});
 				} else {
-					toastElement.classList.remove("panning");
+					this.isPanning = false;
 					animations.animateReset(toastElement);
 				}
 			});
@@ -269,11 +268,10 @@ export class ToastNotification implements IToastObject {
 		return iconEl;
 	}
 
-	createAction(action: IToastAction, toastObject: IToastObject) {
+	createAction(action: ToastAction, toastObject: ToastNotification) {
 		const el = document.createElement(action.href ? "a" : "button");
 
 		el.classList.add("toasted__action");
-		el.classList.add("ripple");
 
 		if (el instanceof HTMLButtonElement) {
 			if (action.text) el.textContent = action.text;
@@ -283,10 +281,6 @@ export class ToastNotification implements IToastObject {
 			if (action.text) el.text = action.text;
 			if (action.href) el.href = action.href;
 		}
-
-		// if (action.target) {
-		// 	el.target = action.target;
-		// }
 
 		if (action.icon) {
 			el.classList.add("icon");
@@ -333,7 +327,6 @@ export class ToastNotification implements IToastObject {
 			actionClasses.forEach((className) => el.classList.add(className.trim()));
 		}
 
-		// initiate push with ready
 		if (action.push) {
 			el.addEventListener("click", (e) => {
 				e.preventDefault();
@@ -345,11 +338,7 @@ export class ToastNotification implements IToastObject {
 				}
 
 				this.options.router.push(action.push);
-
-				// fade away toast after action.
-				if (!action.push.dontClose) {
-					toastObject.goAway(0);
-				}
+				toastObject.goAway(0);
 			});
 		}
 
