@@ -15,5 +15,5 @@
 		"rootDirs": ["src"],
 		"typeRoots": ["./src/types"]
 	},
-	"include": ["src/**/*", "modules"]
+	"include": ["src/**/*"]
 }
