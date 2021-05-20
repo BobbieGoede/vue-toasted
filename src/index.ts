@@ -1,3 +1,7 @@
+/// <reference path="../modules/vue.d.ts" />
+/// <reference path="../modules/shims-vue.d.ts" />
+/// <reference path="../modules/window.d.ts" />
+
 import { Toasted } from "./js/toast";
 import ToastComponent from "./toast.vue";
 import { ToastOptions } from "./js/show";
