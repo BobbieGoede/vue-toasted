@@ -31,5 +31,3 @@ declare module "vuex/types/index" {
 		$toast: Toasted;
 	}
 }
-
-export {};
