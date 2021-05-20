@@ -10,7 +10,7 @@
 	},
 	"sideEffects": true,
 	"main": "./dist/vue-toasted.js",
-	"types": "./src/types/index.d.ts",
+	"types": "./types/index.d.ts",
 	"scripts": {
 		"dev": "cross-env NODE_ENV=development webpack serve --open",
 		"build": "cross-env NODE_ENV=production webpack --config ./build/webpack.release.js --progress",
