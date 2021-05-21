@@ -16,21 +16,21 @@ $info: #4476ff;
 		font-size: 15px;
 		color: #fff;
 		box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08), 0 2px 4px rgba(0, 0, 0, 0.12);
+	}
 
-		&.success {
-			background: $success;
-			border-color: $success;
-		}
+	&--success {
+		background: $success;
+		border-color: $success;
+	}
 
-		&.error {
-			background: $error;
-			border-color: $error;
-		}
+	&--error {
+		background: $error;
+		border-color: $error;
+	}
 
-		&.info {
-			background: $info;
-			border-color: $info;
-		}
+	&--info {
+		background: $info;
+		border-color: $info;
 	}
 
 	&--rounded {
