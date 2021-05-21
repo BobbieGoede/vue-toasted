@@ -26,7 +26,9 @@
 				</label>
 				<label>
 					<span>Icon</span>
-					<input type="text" v-model="customToast.options.icon" />
+					<input type="text" v-model="customToast.options.icon.name" />
+					<span>After</span>
+					<input type="checkbox" v-model="customToast.options.icon.after" />
 				</label>
 				<label>
 					<span>Position</span>
@@ -43,8 +45,10 @@
 						</button>
 					</div>
 					<div class="action-entries">
-						<div v-for="(action, i) of customToast.options.action" :key="action.text" class="action-entry">
-							{{ action.text }}
+						<div v-for="(action, i) of customToast.options.action" :key="i" class="action-entry">
+							<input type="text" v-model="action.text" />
+							<input type="text" v-model="action.icon" />
+							<!-- <input type="checkbox" v-model="action.icon.after" /> -->
 							<span class="material-icons" @click="removeAction(i)">remove</span>
 						</div>
 					</div>
@@ -67,13 +71,18 @@ export default {
 				type: "info",
 				message: "Hello world!",
 				options: {
-					icon: "sentiment_very_satisfied",
+					icon: {
+						name: "sentiment_very_satisfied",
+						after: false,
+					},
 					duration: 4000,
 					position: "top-center",
-					action: [{ text: "Test", onClick: () => {} }],
+					action: [{ text: "Refresh", icon: "refresh", onClick: () => {} }],
 				},
 			},
 			customAction: "",
+			customActionIcon: "",
+			customActionAfter: false,
 			positionOptions: ["top-right", "top-center", "top-left", "bottom-right", "bottom-center", "bottom-left"],
 			toastTypes: ["info", "success", "error"],
 			logs: [
@@ -90,7 +99,6 @@ export default {
 					buttonText: "Info toast",
 					toastMessage: "This is an info toast",
 					toastOptions: {
-						action: [{ onClick: () => console.log("hi"), text: "Action" }],
 						icon: "info",
 					},
 				},
@@ -107,10 +115,12 @@ export default {
 					type: "success",
 					buttonText: "Success toast",
 					toastMessage: "Test completed.",
-					toastOptions: {
-						action: [{ onClick: () => console.log("hi"), text: "Action" }],
-						icon: "check_circle",
-					},
+					toastOptions: {},
+				},
+				{
+					type: "myCustomError",
+					buttonText: "Custom error",
+					toastMessage: "hello",
 				},
 			],
 		};
@@ -119,10 +129,14 @@ export default {
 		addAction() {
 			this.customToast.options.action.push({
 				text: this.customAction,
+				icon: this.customActionIcon,
+				// after: this.customActionAfter,
 				onClick: () => {},
 			});
 
 			this.customAction = "";
+			this.customActionIcon = "";
+			this.customActionAfter = false;
 		},
 		removeAction(actionIndex) {
 			this.customToast.options.action = this.customToast.options.action.filter((x, i) => i !== actionIndex);
