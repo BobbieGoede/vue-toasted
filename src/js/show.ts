@@ -3,55 +3,87 @@ import animations from "./animations";
 import uuid from "shortid";
 import { ToastAction, Toasted, ToastElement, ToastIconPack, ToastIconPackObject, ToastPosition } from "./toast";
 
-export type UserToastOptions = Partial<ToastOptions> & {
+export type UserToastOptions = {
+	onComplete?: () => void;
+	position?: ToastPosition;
+	duration?: number;
+	keepOnHover?: boolean;
+	theme?: string;
+	type?: string;
+	containerClass?: string | string[];
+	icon?: string | IconOptions;
+	action?: ToastAction | ToastAction[];
+	closeOnSwipe?: boolean;
+	iconPack?: string | ToastIconPack | ToastIconPackObject;
+	className?: string | string[];
+	router?: any;
+	configurations?: Record<string, ToastOptions>;
+	singleton?: boolean;
+	globalToasts?: Record<string, (payload, initiate) => ToastNotification>;
 	fullWidth?: boolean;
 	fitToScreen?: boolean;
-	className?: string | string[];
-	containerClass?: string | string[];
+};
+
+type IconOptions = {
+	name?: string;
+	after?: boolean;
 };
 
 export class ToastOptions {
-	onComplete? = null;
-	position?: ToastPosition = "top-right";
-	duration? = null;
-	keepOnHover? = true;
-	theme? = null;
-	type? = null;
+	onComplete?: () => void = null;
+	position?: ToastPosition = null;
+	duration?: number = null;
+	keepOnHover?: boolean = true;
+	theme?: string = null;
+	type?: string = null;
 	containerClass?: string[] = ["toasted-container"];
-	icon? = null;
-	action? = null;
+	icon?: IconOptions = null;
+	action?: ToastAction[] = [];
 	closeOnSwipe? = true;
-	iconPack?: string | ToastIconPack | ToastIconPackObject = "material";
+	iconPack?: string | ToastIconPack | ToastIconPackObject = null;
 	className?: string[] = [];
 	router?: any = null;
 	configurations?: Record<string, ToastOptions> = {};
 	singleton?: boolean = false;
-	globalToasts?: Record<string, (payload, initiate) => ToastNotification> = {};
+	globalToasts?: Record<string, (payload, initiate, toastOptions?: ToastOptions) => ToastNotification> = {};
 
 	constructor(o: UserToastOptions) {
-		this.theme = o.theme ?? "primary";
-		this.type = o.type ?? "default";
-		this.position = o.position ?? "top-right";
-		this.iconPack = o.iconPack ?? "material";
-
+		if (o.theme) this.theme = o.theme;
+		if (o.type) this.type = o.type;
+		if (o.position) this.position = o.position;
+		if (o.iconPack) this.iconPack = o.iconPack;
 		if (o.onComplete) this.onComplete = o.onComplete;
 		if (o.duration) this.duration = o.duration;
 		if (o.keepOnHover) this.keepOnHover = o.keepOnHover;
-		if (o.icon) this.icon = o.icon;
-		if (o.action) this.action = o.action;
+		if (o.icon) this.icon = typeof o.icon === "object" ? o.icon : { name: o.icon };
+		if (o.action) this.action = Array.isArray(o.action) ? o.action : [o.action];
 		if (o.closeOnSwipe) this.closeOnSwipe = o.closeOnSwipe;
-		if (typeof o.className === "string") this.className = o.className.split(" ");
-		if (typeof o.containerClass === "string") this.containerClass.push(...o.containerClass.split(" "));
-		Object.keys(o?.configurations ?? {}).forEach((x) => {
-			this.configurations[x] = new ToastOptions(o.configurations[x]);
-		});
+		if (o.globalToasts) this.globalToasts = o.globalToasts;
+
+		if (o.className) {
+			const className = Array.isArray(o.className) ? o.className : o.className.split(" ");
+			this.className.push(...className);
+		}
+
+		if (o.containerClass) {
+			const containerClass = Array.isArray(o.containerClass) ? o.containerClass : o.containerClass.split(" ");
+			this.containerClass.push(...containerClass);
+		}
+
+		if (o.configurations != null) {
+			this.configurations = { ...this.configurations, ...o.configurations };
+		}
 
 		if (this.theme) this.className.push(`toasted--${this.theme.trim()}`);
-		if (this.type) this.className.push(this.type);
-
+		else this.className.push(`toasted--default`);
+		if (this.type) this.className.push(`toasted--${this.type}`);
 		if (this.position) this.containerClass.push(this.position.trim());
+
 		if (o.fullWidth) this.containerClass.push("full-width");
 		if (o.fitToScreen) this.containerClass.push("fit-to-screen");
+
+		this.className = [...new Set(this.className)];
+		this.containerClass = [...new Set(this.containerClass)];
 	}
 }
 
@@ -171,11 +203,7 @@ export class ToastNotification {
 		if (options.icon) {
 			const icon = this.createIcon(options);
 
-			if (typeof options.icon === "object" && options.icon.after) {
-				toastElement.appendChild(icon);
-			} else {
-				toastElement.insertBefore(icon, toastElement.firstChild);
-			}
+			toastElement.insertBefore(icon, options.icon.after ? toastElement.nextSibling : toastElement.firstChild);
 		}
 
 		if (options.closeOnSwipe) {
@@ -205,7 +233,6 @@ export class ToastNotification {
 
 		// create and append actions
 		if (options.action) {
-			options.action = Array.isArray(options.action) ? options.action : [options.action];
 			options.action.forEach((action) => {
 				const el = this.createAction(action, this);
 				if (el) toastElement.appendChild(el);
@@ -215,13 +242,13 @@ export class ToastNotification {
 		return toastElement;
 	}
 
-	createIcon(options) {
+	createIcon(options: ToastOptions) {
 		let iconEl = document.createElement("i");
 		iconEl.setAttribute("aria-hidden", "true");
+		iconEl.classList.add("toasted__icon");
 
 		if (typeof options.iconPack === "string") {
-			let iconClass = options.icon?.name ?? options.icon;
-			iconClass = iconClass.trim();
+			let iconClass = options.icon.name.trim();
 
 			switch (options.iconPack) {
 				case "fontawesome":
@@ -248,16 +275,16 @@ export class ToastNotification {
 					break;
 				default:
 					iconEl.classList.add("material-icons");
-					iconEl.textContent = options.icon?.name ?? options.icon;
+					iconEl.textContent = options.icon.name;
 			}
 		}
 
 		if (typeof options.iconPack === "object") {
-			const iconClasses = options.iconPack.classes ?? ["material-icons"];
+			const iconClasses = options.iconPack?.classes ?? ["material-icons"];
 			iconClasses.forEach((iconClass) => iconEl.classList.add(iconClass));
 
-			if (options.iconPack.textContent) {
-				iconEl.textContent = options.icon?.name ?? options.icon;
+			if (options.iconPack?.textContent) {
+				iconEl.textContent = options.icon.name;
 			}
 		}
 
@@ -285,6 +312,7 @@ export class ToastNotification {
 		if (action.icon) {
 			el.classList.add("icon");
 			const iconEl = document.createElement("i");
+			iconEl.classList.add("toasted__icon");
 
 			if (typeof this.options.iconPack === "string") {
 				const iconClass = action.icon.trim();
@@ -314,7 +342,7 @@ export class ToastNotification {
 				const iconClasses = this.options.iconPack?.classes ?? ["material-icons"];
 				iconClasses.forEach((iconClass) => iconEl.classList.add(iconClass));
 
-				if (this.options.iconPack.textContent) {
+				if (this.options.iconPack?.textContent) {
 					iconEl.textContent = action.icon;
 				}
 			}
