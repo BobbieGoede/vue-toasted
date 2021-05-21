@@ -8,6 +8,7 @@ export type ToastType = "success" | "info" | "error" | "default";
 export type ToastTheme = "primary" | "outline" | "bubble";
 export type ToastIconPack = "material" | "fontawesome" | "custom-class" | "callback";
 export type ToastIconPackObject = {
+	iconPack?: ToastIconPack;
 	classes?: string[];
 	textContent?: boolean;
 };
@@ -29,11 +30,19 @@ export interface ToastAction {
 export class Toasted {
 	id: string;
 	options: ToastOptions = {};
+	userOptions: UserToastOptions = {};
 	cachedOptions: Record<string, any> = {};
-	global: Record<string, (payload: ToastOptions) => ToastNotification> = {};
+	defaultOptions: UserToastOptions = {
+		position: "top-right",
+		theme: "primary",
+		type: "default",
+		iconPack: "material",
+	};
+	global: Record<string, (payload: ToastOptions & Record<string, any>, options: ToastOptions) => ToastNotification> =
+		{};
 	toasts: ToastNotification[] = [];
 	container: HTMLElement = null;
-	configurations: Record<string, ToastOptions> = {
+	configurations: Record<string, UserToastOptions> = {
 		show: {},
 		info: { type: "info" },
 		success: { type: "success" },
@@ -42,14 +51,25 @@ export class Toasted {
 
 	constructor(options: UserToastOptions) {
 		this.id = uuid.generate();
+		this.userOptions = options;
 		this.options = new ToastOptions(options);
 
 		this.initializeToastContainer();
 		this.initializeCustomToasts();
 
+		// Merge default configurations with default options and instance options
+		// Object.keys(this.configurations).forEach((x) => {
+		// 	this.configurations[x] = { ...this.defaultOptions, ...this.userOptions, ...this.configurations[x] };
+		// });
+
+		// Merge default configurations with user options
+		// Add user configurations
 		const configs = this.options?.configurations ?? {};
 		Object.keys(configs).forEach((x) => {
-			this.configurations[x] = { ...this.configurations?.[x], ...configs[x] };
+			this.configurations[x] = {
+				...this.configurations?.[x],
+				...configs[x],
+			};
 		});
 	}
 
@@ -59,11 +79,16 @@ export class Toasted {
 
 	notify(id: string, message: string, options: UserToastOptions = {}) {
 		const config = this.configurations?.[id] ?? {};
-		return this.showToast(message, new ToastOptions({ ...config, ...options }));
+		return this.showToast(
+			message,
+			new ToastOptions({ ...this.defaultOptions, ...this.userOptions, ...config, ...options })
+		);
 	}
 
 	setConfiguration(id: string, options: UserToastOptions = {}, extend: boolean = true) {
-		this.configurations[id] = { ...(extend ? this.configurations[id] : {}), ...options };
+		if (extend) this.configurations[id] = { ...this.configurations[id], ...options };
+		else this.configurations[id] = { ...options };
+
 		return this.configurations[id];
 	}
 
@@ -110,19 +135,18 @@ export class Toasted {
 		return toast;
 	}
 
-	registerToast(name: string, callback: ToastRegistrationPayload = null, options: ToastOptions = {}) {
-		this.options.globalToasts[name] = function (payload, initiate) {
+	registerToast(name: string, callback: ToastRegistrationPayload = null, options: UserToastOptions = {}) {
+		this.options.globalToasts[name] = function (payload, showToast, toastOptions = {}) {
 			const message = typeof callback === "function" ? callback(payload) : payload ?? callback;
 
-			return initiate(message, options);
+			return showToast(message, { ...options, ...toastOptions });
 		};
 
 		this.initializeCustomToasts();
 	}
 
 	initializeCustomToasts() {
-		// this will initiate toast for the custom toast.
-		const initiate = (message: string | HTMLElement, options: string | ToastOptions = {}) => {
+		const showToast = (message: string | HTMLElement, options: string | ToastOptions = {}) => {
 			if (typeof options === "string") {
 				return this[options](message, {});
 			}
@@ -132,7 +156,9 @@ export class Toasted {
 
 		this.global = {};
 		Object.keys(this.options.globalToasts).forEach((name) => {
-			this.global[name] = (payload = {}): ToastNotification => this.options.globalToasts[name](payload, initiate);
+			this.global[name] = (payload = {}, options = {}) => {
+				return this.options.globalToasts[name](payload, showToast, options);
+			};
 		});
 	}
 
