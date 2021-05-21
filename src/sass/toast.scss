@@ -6,6 +6,7 @@
 	flex-direction: column;
 	position: fixed;
 	z-index: 10000;
+	line-height: normal;
 
 	&:hover {
 		cursor: grab;
@@ -31,7 +32,7 @@
 	&.top-left,
 	&.top-center {
 		top: 1rem;
-		padding-top: -8px;
+		// margin-top: -8px;
 	}
 
 	// Positioning
