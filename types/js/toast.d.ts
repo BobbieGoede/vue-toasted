@@ -7,6 +7,7 @@ export declare type ToastType = "success" | "info" | "error" | "default";
 export declare type ToastTheme = "primary" | "outline" | "bubble";
 export declare type ToastIconPack = "material" | "fontawesome" | "custom-class" | "callback";
 export declare type ToastIconPackObject = {
+    iconPack?: ToastIconPack;
     classes?: string[];
     textContent?: boolean;
 };
@@ -26,15 +27,17 @@ export interface ToastAction {
 export declare class Toasted {
     id: string;
     options: ToastOptions;
+    userOptions: UserToastOptions;
     cachedOptions: Record<string, any>;
-    global: Record<string, (payload: ToastOptions) => ToastNotification>;
+    defaultOptions: UserToastOptions;
+    global: Record<string, (payload: ToastOptions & Record<string, any>, options: ToastOptions) => ToastNotification>;
     toasts: ToastNotification[];
     container: HTMLElement;
-    configurations: Record<string, ToastOptions>;
+    configurations: Record<string, UserToastOptions>;
     constructor(options: UserToastOptions);
     register(name: string, payload?: ToastRegistrationPayload, options?: UserToastOptions): void;
     notify(id: string, message: string, options?: UserToastOptions): ToastNotification;
-    setConfiguration(id: string, options?: UserToastOptions, extend?: boolean): ToastOptions;
+    setConfiguration(id: string, options?: UserToastOptions, extend?: boolean): UserToastOptions;
     show(message: string, options?: UserToastOptions): ToastNotification;
     success(message: string, options?: UserToastOptions): ToastNotification;
     info(message: string, options?: UserToastOptions): ToastNotification;
@@ -42,7 +45,7 @@ export declare class Toasted {
     remove(el: ToastElement): void;
     clear(onClear: () => any): boolean;
     showToast(message: string | HTMLElement, options?: ToastOptions): ToastNotification;
-    registerToast(name: string, callback?: ToastRegistrationPayload, options?: ToastOptions): void;
+    registerToast(name: string, callback?: ToastRegistrationPayload, options?: UserToastOptions): void;
     initializeCustomToasts(): void;
     initializeToastContainer(): void;
 }
