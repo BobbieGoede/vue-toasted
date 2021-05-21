@@ -15,5 +15,5 @@
 		"rootDirs": ["src"],
 		"typeRoots": ["./src/types"]
 	},
-	"include": ["src/**/*"]
+	"include": ["src/**/*", "modules/window.d.ts", "modules/vue.d.ts", "modules/shims-vue.d.ts"]
 }
