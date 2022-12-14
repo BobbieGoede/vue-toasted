@@ -4,7 +4,7 @@ const MiniCssExtractPlugin = require("mini-css-extract-plugin");
 module.exports = {
 	mode: "production",
 	entry: {
-		"vue-toasted.min": "./src/sass/toast.scss",
+		"vue-toasted.min": "./src/sass/main.scss",
 	},
 	optimization: {
 		splitChunks: {
@@ -34,13 +34,13 @@ module.exports = {
 				use: [MiniCssExtractPlugin.loader, "css-loader", "postcss-loader", "sass-loader"],
 				exclude: /node_modules/,
 			},
-			{
-				test: /\.(png|jpg|gif|svg)$/,
-				loader: "file-loader",
-				options: {
-					name: "[name].[ext]?[hash]",
-				},
-			},
+			// {
+			// 	test: /\.(png|jpg|gif|svg)$/,
+			// 	loader: "file-loader",
+			// 	options: {
+			// 		name: "[name].[ext]?[hash]",
+			// 	},
+			// },
 		],
 	},
 };

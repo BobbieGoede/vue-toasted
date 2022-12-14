@@ -7,8 +7,8 @@ module.exports = {
 	devtool: "source-map",
 	plugins: [new VueLoaderPlugin()],
 	entry: {
-		toasted: "./src/index-core.ts",
-		"toasted.min": "./src/index-core.ts",
+		toasted: "./src/js/toast.ts",
+		"toasted.min": "./src/js/toast.ts",
 	},
 	optimization: {
 		minimizer: [

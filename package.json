@@ -9,7 +9,7 @@
 		"url": "https://github.com/shakee93/vue-toasted.git"
 	},
 	"sideEffects": true,
-	"main": "./dist/vue-toasted.js",
+	"main": "./dist/toasted.js",
 	"types": "./types/index.d.ts",
 	"scripts": {
 		"dev": "cross-env NODE_ENV=development webpack serve --open",

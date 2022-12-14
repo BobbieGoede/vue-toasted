@@ -1,4 +1,4 @@
-import Toasted from "../src/index-core";
+import Toasted from "../src/index";
 
 declare module "vue/types/vue" {
 	interface VueConstructor {

@@ -11,8 +11,8 @@ module.exports = {
 		noInfo: true,
 	},
 	entry: {
-		"vue-toasted": "./src/index.ts",
-		"vue-toasted.min": "./src/index.ts",
+		"vue-toasted": "./src/plugin.ts",
+		"vue-toasted.min": "./src/plugin.ts",
 	},
 	resolve: {
 		alias: { vue$: "vue/dist/vue.esm.js" },
