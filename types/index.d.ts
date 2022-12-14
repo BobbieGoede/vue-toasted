@@ -1,3 +1,2 @@
-import { Toasted } from "./js/toast";
-export default Toasted;
+export * from "./js/toast";
 //# sourceMappingURL=index.d.ts.map
